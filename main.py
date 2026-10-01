@@ -2,6 +2,8 @@ import os
 import re
 import csv
 import openpyxl
+import sys
+import subprocess
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from hl7apy.parser import parse_message
@@ -20,6 +22,18 @@ STANDARD_SEGMENT_ORDER = [
     'IN1', 'IN2', 'IN3', 'NK1', 'GT1', 'AL1', 'DG1', 'PR1', 
     'OBX', 'NTE', 'ORC', 'OBR', 'SPM'
 ]
+
+def open_file(path):
+    """Öffnet eine Datei mit dem Standardprogramm des Betriebssystems."""
+    try:
+        if sys.platform.startswith("win"):
+            os.startfile(os.path.abspath(path))
+        elif sys.platform == "darwin":
+            subprocess.run(["open", path], check=False)
+        else:
+            subprocess.run(["xdg-open", path], check=False)
+    except Exception as e:
+        print(f"Datei konnte nicht automatisch geöffnet werden: {e}")
 
 
 def clean_sheet_title(title, max_len=31):
@@ -464,6 +478,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
     if static_count > 0 or folders_processed > 0:
         wb.save(output_excel_path)
         print(f"\nErfolgreich gespeichert in '{output_excel_path}' ({static_count} statische(s) Sheet(s), {folders_processed} dynamische(s) Sheet(s)).")
+        open_file(output_excel_path)
     else:
         print(f"Keine Dateien in '{import_dir}' oder '{static_excel_path}' gefunden.")
 
