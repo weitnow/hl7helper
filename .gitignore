@@ -1,0 +1,13 @@
+# 1. Alles im Ordner 'archiv' ignorieren (inklusive Unterordner und Dateien)
+/archiv/
+
+# 2. Excel-Dateien (.xlsx) nur im Root-Verzeichnis ignorieren
+/*.xlsx
+
+# 3. Bestimmte Daten-Dateien (.hl7, .txt, .dat) im Ordner 'data' und allen Unterordnern ignorieren
+/data/**/*.hl7
+/data/**/*.txt
+/data/**/*.dat
+
+# Hinweis: .map-Dateien sowie alle anderen Dateitypen im Ordner 'data' 
+# (und .xlsx-Dateien in Unterordnern) werden automatisch von Git erfasst.
