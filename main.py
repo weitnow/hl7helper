@@ -111,21 +111,22 @@ def extract_hl7_fields(file_path):
         seg_display_name = f"{seg_name} ({seg_index})" if seg_index > 1 else seg_name
 
         for field in element.children:
-            if hasattr(field, 'children') and len(field.children) > 0 and hasattr(field.children[0], 'value'):
-                val_list = [str(rep.value) for rep in field.children if rep.value]
-                field_val = "~".join(val_list)
+            # Komponenten mit ^ (bzw. Subkomponenten mit &) korrekt ausgeben
+            field_val = field.to_er7()
+            if not field_val:
+                continue
+
+            raw_num = field.name.split('_')[-1]
+            if seg_index > 1:
+                field_id = f"{seg_name}[{seg_index}]_{raw_num}"
             else:
-                field_val = str(field.value) if field.value else ""
+                field_id = f"{seg_name}_{raw_num}"
 
-            if field_val:
-                raw_num = field.name.split('_')[-1]
-                if seg_index > 1:
-                    field_id = f"{seg_name}[{seg_index}]_{raw_num}"
-                else:
-                    field_id = f"{seg_name}_{raw_num}"
-
+            if field_id in fields_data:
+                # Wiederholung (~) desselben Feldes: anhängen statt überschreiben
+                fields_data[field_id]['value'] += "~" + field_val
+            else:
                 long_name = field.long_name if field.long_name else field_id
-
                 fields_data[field_id] = {
                     'segment': seg_display_name,
                     'long_name': long_name,
