@@ -17,6 +17,7 @@
 # Feld 3=Erstellungsdatum
 
 
-PID_3 = SuvaPID~OpalePID
+PID_2 = SuvaPID
+PID_3 = OpalePID
 
 

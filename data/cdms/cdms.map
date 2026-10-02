@@ -18,5 +18,5 @@
 
 
 PID_3 = SuvaPID~OpalePID
-
+PV1_3 = PointOfCare^Room^Room.Bed^Facility^LocationStatus^PersonLocationType^Building
 
