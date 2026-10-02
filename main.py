@@ -18,10 +18,22 @@ except ImportError:
 
 # Standard-Reihenfolge der HL7-Segmente für die Sortierung
 STANDARD_SEGMENT_ORDER = [
-    'MSH', 'EVN', 'PID', 'PD1', 'PV1', 'PV2', 
-    'IN1', 'IN2', 'IN3', 'NK1', 'GT1', 'AL1', 'DG1', 'PR1', 
+    'MSH', 'EVN', 'PID', 'PD1', 'PV1', 'PV2',
+    'IN1', 'IN2', 'IN3', 'NK1', 'GT1', 'AL1', 'DG1', 'PR1',
     'OBX', 'NTE', 'ORC', 'OBR', 'SPM'
 ]
+
+# Bezeichnungen für Komponenten (Schlüssel ohne Segment-Index, z. B. PV1_3.1)
+COMPONENT_NAMES = {
+    'PV1_3.1': 'Point of Care',
+    'PV1_3.2': 'Room',
+    'PV1_3.3': 'Bed',
+    'PV1_3.4': 'Facility',
+    'PV1_3.5': 'Location Status',
+    'PV1_3.6': 'Person Location Type',
+    'PV1_3.7': 'Building',
+}
+
 
 def open_file(path):
     """Öffnet eine Datei mit dem Standardprogramm des Betriebssystems."""
@@ -43,10 +55,14 @@ def clean_sheet_title(title, max_len=31):
 
 
 def get_field_sort_key(field_id):
-    """Sortier-Schlüssel für logische HL7-Reihenfolge."""
+    """Sortier-Schlüssel für logische HL7-Reihenfolge (inkl. Komponenten)."""
     base = field_id.split('_')[0]
-    field_num = int(field_id.split('_')[-1]) if field_id.split('_')[-1].isdigit() else 999
-    
+    last = field_id.split('_')[-1]          # z. B. "3" oder "3.1"
+    parts = last.split('.')
+
+    field_num = int(parts[0]) if parts[0].isdigit() else 999
+    comp_num = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+
     if '[' in base:
         seg_name = base.split('[')[0]
         seg_idx = int(base.split('[')[1].replace(']', ''))
@@ -59,7 +75,7 @@ def get_field_sort_key(field_id):
     else:
         seg_priority = 99
 
-    return (seg_priority, seg_idx, field_num)
+    return (seg_priority, seg_idx, field_num, comp_num)
 
 
 # ==========================================
@@ -83,7 +99,7 @@ def extract_mapping_descriptions(file_path):
             line = line.strip()
             if not line or line.startswith('#') or line.startswith('//'):
                 continue
-            
+
             if '=' in line:
                 key, val = line.split('=', 1)
             elif ':' in line:
@@ -146,6 +162,25 @@ def extract_hl7_fields(file_path):
                     'long_name': long_name,
                     'value': field_val
                 }
+
+            # Komponenten (^) als eigene Zeilen: PV1_3.1, PV1_3.2, ...
+            if '^' in field_val:
+                for comp_no, comp_val in enumerate(field_val.split('^'), start=1):
+                    if not comp_val:
+                        continue  # leere Komponenten nicht anzeigen
+                    comp_id = f"{field_id}.{comp_no}"
+                    if comp_id in fields_data:
+                        # Wiederholung (~): anhängen
+                        fields_data[comp_id]['value'] += "~" + comp_val
+                    else:
+                        # Segment-Index entfernen, damit PV1[2]_3.1 ebenfalls PV1_3.1 findet
+                        lookup_key = re.sub(r'\[\d+\]', '', comp_id)
+                        base_name = fields_data[field_id]['long_name']
+                        fields_data[comp_id] = {
+                            'segment': seg_display_name,
+                            'long_name': COMPONENT_NAMES.get(lookup_key, f"{base_name}.{comp_no}"),
+                            'value': comp_val
+                        }
 
     return fields_data
 
@@ -418,7 +453,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
 
 def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx", static_excel_path=os.path.join("static_files", "manual.xlsx")):
     """Lädt die statische Basis-Arbeitsmappe (inkl. Grafiken/Screenshots) und erweitert sie um die dynamischen Daten-Sheets."""
-    
+
     if not HAS_PILLOW:
         print("\n" + "!"*80)
         print("WARNUNG: Das Python-Paket 'Pillow' (PIL) ist NICHT installiert!")
@@ -448,7 +483,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
                 continue
 
             matching_files = [
-                os.path.join(root, f) for f in files 
+                os.path.join(root, f) for f in files
                 if f.lower().endswith(data_extensions)
             ]
 

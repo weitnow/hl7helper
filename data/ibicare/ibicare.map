@@ -1,8 +1,8 @@
 # Beispiel für mapping.map
 
-#BESCH_BESONDERHEITEN=Testsystem vorhanden: J
-#BESCH_LOGIK_ORCHESTRA=Hier wird in Orchestra geprüft, ob im Feld 2 == 1 ist
-#BESCH_LOGIK_UMSYSTEM=Wenn Feld 2 = 2 dann 1, ansonsten 3
+#BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja
+#BESCH_LOGIK_ORCHESTRA=
+#BESCH_LOGIK_UMSYSTEM=
 
 # Format: Feld-ID=Beschreibung
 
@@ -18,5 +18,6 @@
 
 
 PID_3 = SuvaPID~OpalePID
-
+PV1_3 = Siehe PV1_3.1 bis PV1_3.7
+#PV1_20 = Textformat erwartet (z.B. allgemein) 
 

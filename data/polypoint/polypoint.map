@@ -1,8 +1,8 @@
 # Beispiel für mapping.map
 
-#BESCH_BESONDERHEITEN=Testsystem vorhanden: J
-#BESCH_LOGIK_ORCHESTRA=Hier wird in Orchestra geprüft, ob im Feld 2 == 1 ist
-#BESCH_LOGIK_UMSYSTEM=Wenn Feld 2 = 2 dann 1, ansonsten 3
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein
+#BESCH_LOGIK_ORCHESTRA=
+#BESCH_LOGIK_UMSYSTEM=
 
 # Format: Feld-ID=Beschreibung
 
