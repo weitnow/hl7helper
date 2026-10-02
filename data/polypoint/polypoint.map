@@ -11,12 +11,84 @@ BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein
 # PID_7=Geburtsdatum
 # OBX_5=Laborwert Resultat
 
-# Für Text-/CSV-Dateien:
-# Feld 1=Auftragsnummer
-# Feld 2=Kundenname
-# Feld 3=Erstellungsdatum
 
-
-
+Feld 1=
+Feld 2=
+Feld 3=
+Feld 4=
+Feld 5=PID
+Feld 6=
+Feld 7=FID
+Feld 8=
+Feld 9=I = stationär, O = ambulant
+Feld 10=Name
+Feld 11=Vorname
+Feld 12=Geburtsdatum
+Feld 13=1 = männlich, 2 = weiblich
+Feld 14=Strasse
+Feld 15=
+Feld 16=PLZ
+Feld 17=Ort
+Feld 18=
+Feld 19=1 = stationär, 2 = ambulant
+Feld 20=Aufnahmedatum
+Feld 21=Aufnahmezeit
+Feld 22=Fach. OE
+Feld 23=Patientenart
+Feld 24=Zimmer
+Feld 25=Entlassungsdatum
+Feld 26=Entlassungszeit
+Feld 27=
+Feld 28=
+Feld 29=Geburtsname
+Feld 30=
+Feld 31=
+Feld 32=Telefonnummer
+Feld 33=
+Feld 34=
+Feld 35=
+Feld 36=
+Feld 37=
+Feld 38=
+Feld 39=
+Feld 40=Email
+Feld 41=
+Feld 42=Bürgerort
+Feld 43=Nationalität
+Feld 44=Zivilstand
+Feld 45=
+Feld 46=AHV-Nummer
+Feld 47=
+Feld 48=
+Feld 49=
+Feld 50=
+Feld 51=
+Feld 52=
+Feld 53=
+Feld 54=
+Feld 55=Status
+Feld 56=
+Feld 57=
+Feld 58=
+Feld 59=
+Feld 60=
+Feld 61=
+Feld 62=
+Feld 63=
+Feld 64=
+Feld 65=
+Feld 66=
+Feld 67=
+Feld 68=
+Feld 69=
+Feld 70=
+Feld 71=
+Feld 72=
+Feld 73=
+Feld 74=
+Feld 75=
+Feld 76=Verständigungssprache
+Feld 77=Muttersprache
+Feld 78=Status
 
 
