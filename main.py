@@ -18,8 +18,9 @@ except ImportError:
     HAS_PILLOW = False
 
 # Quellordner und erlaubte Endungen für das automatische Kopieren der Testdateien
-TESTFILE_DIR = "testfile"
-TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat')
+#TESTFILE_DIR = "testfile"
+TESTFILE_DIR = r"C:\Users\A0047444\Downloads"
+TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat', '.bin')
 
 # Standard-Reihenfolge der HL7-Segmente für die Sortierung
 STANDARD_SEGMENT_ORDER = [
@@ -53,27 +54,64 @@ def open_file(path):
         print(f"Datei konnte nicht automatisch geöffnet werden: {e}")
 
 
+def detect_extension(file_path):
+    """Erkennt anhand des Inhalts, ob eine Datei hl7, dat oder txt war. None, wenn unklar."""
+    with open(file_path, 'rb') as f:
+        data = f.read(4096)
+
+    if data.startswith((b'\xff\xfe', b'\xfe\xff')):
+        text = data.decode('utf-16', errors='ignore')
+    else:
+        text = data.decode('utf-8-sig', errors='ignore')
+
+    # BOM, Leerraum und MLLP-Startzeichen (\x0b) vorne entfernen
+    text = text.lstrip('\x0b\ufeff \t\r\n')
+
+    if text.startswith('MSH|'):
+        return '.hl7'
+
+    first_line = next((l for l in text.splitlines() if l.strip()), '')
+    pipes, semis = first_line.count('|'), first_line.count(';')
+    if pipes == 0 and semis == 0:
+        return None
+    return '.dat' if pipes > semis else '.txt'
+
+
 def copy_testfiles(target_dir, source_dir=TESTFILE_DIR):
-    """Kopiert hl7/txt/dat-Dateien aus source_dir nach target_dir.
+    """Kopiert die neueste hl7/txt/dat/bin-Datei aus source_dir nach target_dir.
+    .bin-Dateien werden anhand des Inhalts mit der richtigen Endung kopiert.
     Gibt die Anzahl kopierter Dateien zurück (None bei Fehler)."""
     if not os.path.isdir(source_dir):
         print(f"FEHLER: Quellordner '{source_dir}' wurde nicht gefunden.")
         return None
 
-    files = [
-        f for f in os.listdir(source_dir)
+    candidates = [
+        os.path.join(source_dir, f) for f in os.listdir(source_dir)
         if f.lower().endswith(TESTFILE_EXTENSIONS)
         and os.path.isfile(os.path.join(source_dir, f))
     ]
-    if not files:
-        print(f"FEHLER: Keine .hl7/.txt/.dat-Dateien in '{source_dir}' gefunden.")
+    if not candidates:
+        print(f"FEHLER: Keine .hl7/.txt/.dat/.bin-Dateien in '{source_dir}' gefunden.")
         return None
 
-    for f in files:
-        shutil.copy2(os.path.join(source_dir, f), os.path.join(target_dir, f))
+    # Neueste Datei anhand des Änderungsdatums
+    src = max(candidates, key=os.path.getmtime)
+    f = os.path.basename(src)
+    stem, ext = os.path.splitext(f)
 
-    print(f"{len(files)} Datei(en) aus '{source_dir}' nach '{target_dir}' kopiert.")
-    return len(files)
+    if ext.lower() == '.bin':
+        new_ext = detect_extension(src)
+        if new_ext is None:
+            print(f"FEHLER: Dateityp der neuesten Datei '{f}' konnte nicht erkannt werden.")
+            return None
+        target_name = stem + new_ext
+        print(f"'{f}' als '{target_name}' erkannt.")
+    else:
+        target_name = f
+
+    shutil.copy2(src, os.path.join(target_dir, target_name))
+    print(f"Neueste Datei '{f}' aus '{source_dir}' nach '{target_dir}' kopiert.")
+    return 1
 
 
 def clean_sheet_title(title, max_len=31):
