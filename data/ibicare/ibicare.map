@@ -1,0 +1,22 @@
+# Beispiel für mapping.map
+
+#BESCH_BESONDERHEITEN=Testsystem vorhanden: J
+#BESCH_LOGIK_ORCHESTRA=Hier wird in Orchestra geprüft, ob im Feld 2 == 1 ist
+#BESCH_LOGIK_UMSYSTEM=Wenn Feld 2 = 2 dann 1, ansonsten 3
+
+# Format: Feld-ID=Beschreibung
+
+# Für HL7-Felder:
+# PID_5=Patientenname
+# PID_7=Geburtsdatum
+# OBX_5=Laborwert Resultat
+
+# Für Text-/CSV-Dateien:
+# Feld 1=Auftragsnummer
+# Feld 2=Kundenname
+# Feld 3=Erstellungsdatum
+
+
+PID_3 = SuvaPID~OpalePID
+
+
