@@ -2,7 +2,7 @@
 
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein
 #BESCH_LOGIK_ORCHESTRA=
-#BESCH_LOGIK_UMSYSTEM=
+#BESCH_LOGIK_UMSYSTEM=Wenn Patient ambulant, dann wir er nur in Interflex importiert, wenn die gelieferte Abteilung in Interflex freigeschaltet ist
 
 # Format: Feld-ID=Beschreibung
 
