@@ -1,8 +1,8 @@
 # Beispiel für mapping.map
 
-BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, 1 = stationär, 2 = ambulant
 #BESCH_LOGIK_ORCHESTRA=
-#BESCH_LOGIK_UMSYSTEM=Wenn Patient ambulant, dann wir er nur in Interflex importiert, wenn die gelieferte Abteilung in Interflex freigeschaltet ist
+#BESCH_LOGIK_UMSYSTEM=Bei stationären wie auch ambulanten Patienten wird in der Regel immer der Besucher (Stammdaten des Patienten), sowie auch der Besuch (mit Gültigkeitsdauer, Zimmer, Bett, Zutrittsrechten etc.) angelegt. Allerdings gibt es in Interflex eine Logik, dass bei ambulanten Fällen der Besuch nur angelegt wird, wenn die Abteilung in Interflex unter ambulante Fälle erfasst ist.
 
 # Format: Feld-ID=Beschreibung
 
@@ -12,9 +12,21 @@ BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein
 # OBX_5=Laborwert Resultat
 
 # Für Text-/CSV-Dateien:
-# Feld 1=Auftragsnummer
-# Feld 2=Kundenname
-# Feld 3=Erstellungsdatum
+Feld 1=Event
+Feld 2=Name
+Feld 3=Vorname
+Feld 4=Strasse
+Feld 5=PLZ
+Feld 6=Ort
+Feld 7=OpalePID
+Feld 8=Geburtsdatum
+Feld 9=Geschlecht
+Feld 10=Abteilung
+Feld 11=Zimmer.Bett
+Feld 12=TCPOS-Nummer
+Feld 13=Eintrittsdatum
+Feld 14=Austrittsdatum
+Feld 15=Ambulant_Stationär
 
 
 
