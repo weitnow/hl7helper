@@ -1,6 +1,7 @@
 import os
 import re
 import csv
+import shutil
 import openpyxl
 import sys
 import subprocess
@@ -15,6 +16,10 @@ try:
     HAS_PILLOW = True
 except ImportError:
     HAS_PILLOW = False
+
+# Quellordner und erlaubte Endungen für das automatische Kopieren der Testdateien
+TESTFILE_DIR = "testfile"
+TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat')
 
 # Standard-Reihenfolge der HL7-Segmente für die Sortierung
 STANDARD_SEGMENT_ORDER = [
@@ -46,6 +51,29 @@ def open_file(path):
             subprocess.run(["xdg-open", path], check=False)
     except Exception as e:
         print(f"Datei konnte nicht automatisch geöffnet werden: {e}")
+
+
+def copy_testfiles(target_dir, source_dir=TESTFILE_DIR):
+    """Kopiert hl7/txt/dat-Dateien aus source_dir nach target_dir.
+    Gibt die Anzahl kopierter Dateien zurück (None bei Fehler)."""
+    if not os.path.isdir(source_dir):
+        print(f"FEHLER: Quellordner '{source_dir}' wurde nicht gefunden.")
+        return None
+
+    files = [
+        f for f in os.listdir(source_dir)
+        if f.lower().endswith(TESTFILE_EXTENSIONS)
+        and os.path.isfile(os.path.join(source_dir, f))
+    ]
+    if not files:
+        print(f"FEHLER: Keine .hl7/.txt/.dat-Dateien in '{source_dir}' gefunden.")
+        return None
+
+    for f in files:
+        shutil.copy2(os.path.join(source_dir, f), os.path.join(target_dir, f))
+
+    print(f"{len(files)} Datei(en) aus '{source_dir}' nach '{target_dir}' kopiert.")
+    return len(files)
 
 
 def clean_sheet_title(title, max_len=31):
@@ -451,8 +479,15 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
 # HAUPTFUNKTION / STEUERUNG
 # ==========================================
 
-def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx", static_excel_path=os.path.join("static_files", "manual.xlsx")):
-    """Lädt die statische Basis-Arbeitsmappe (inkl. Grafiken/Screenshots) und erweitert sie um die dynamischen Daten-Sheets."""
+def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx",
+               static_excel_path=os.path.join("static_files", "manual.xlsx"),
+               target_folder=None):
+    """Lädt die statische Basis-Arbeitsmappe (inkl. Grafiken/Screenshots) und erweitert sie um die dynamischen Daten-Sheets.
+
+    Optional: target_folder = Name eines Unterordners in import_dir. Dann werden die
+    hl7/txt/dat-Dateien aus 'testfile' dorthin kopiert und nach dem Speichern wird
+    das gleichnamige Sheet direkt angezeigt.
+    """
 
     if not HAS_PILLOW:
         print("\n" + "!"*80)
@@ -460,6 +495,17 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
         print("Ohne Pillow entfernt openpyxl automatisch alle Screenshots/Bilder aus der Excel-Datei!")
         print("Bitte installiere es bei Bedarf mit:  pip install pillow")
         print("!"*80 + "\n")
+
+    # Optional: Testdateien in einen bestimmten Unterordner kopieren
+    if target_folder:
+        target_dir = os.path.join(import_dir, target_folder)
+        if not os.path.isdir(target_dir):
+            print(f"FEHLER: Unterordner '{target_folder}' existiert nicht in '{import_dir}'.")
+            return
+        if copy_testfiles(target_dir) is None:
+            return
+
+    created_sheets = {}
 
     data_extensions = ('.hl7', '.dat', '.txt', '.csv')
     mapping_extensions = ('.map', '.mapping')
@@ -503,6 +549,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
             print(f"Verarbeite Ordner '{folder_name}' ({len(matching_files)} Datei(en)){map_info}...")
 
             ws = wb.create_sheet(title=sheet_title)
+            created_sheets[folder_name] = ws
             write_data_sheet(ws, matching_files, mapping_file=mapping_file)
             folders_processed += 1
 
@@ -511,6 +558,16 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
         wb.remove(default_sheet)
 
     if static_count > 0 or folders_processed > 0:
+        # Gewünschtes Sheet als aktives Blatt setzen, damit Excel es direkt anzeigt
+        if target_folder:
+            target_ws = created_sheets.get(target_folder)
+            if target_ws is None:
+                print(f"WARNUNG: Für '{target_folder}' wurde kein Sheet erzeugt.")
+            else:
+                wb.active = wb.index(target_ws)
+                for sheet in wb.worksheets:
+                    sheet.sheet_view.tabSelected = (sheet is target_ws)
+
         wb.save(output_excel_path)
         print(f"\nErfolgreich gespeichert in '{output_excel_path}' ({static_count} statische(s) Sheet(s), {folders_processed} dynamische(s) Sheet(s)).")
         open_file(output_excel_path)
@@ -519,4 +576,6 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
 
 
 if __name__ == "__main__":
-    run_import("data", "vergleich_transponiert.xlsx")
+    # Optional: Unterordnername als Argument, z. B.  python hl7_vergleich.py MeinOrdner
+    folder = sys.argv[1] if len(sys.argv) > 1 else None
+    run_import("data", "vergleich_transponiert.xlsx", target_folder=folder)
