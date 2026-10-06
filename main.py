@@ -48,6 +48,9 @@ COMPONENT_NAMES = {
     'PV1_3.7': 'Building',
 }
 
+# Felder, die bei HL7-Dateien immer angezeigt werden (auch wenn leer) und hervorgehoben sind
+ALWAYS_SHOW_FIELDS = list(COMPONENT_NAMES.keys())   # PV1_3.1 ... PV1_3.7
+
 
 def open_file(path):
     """Öffnet eine Datei mit dem Standardprogramm des Betriebssystems."""
@@ -342,6 +345,10 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
     if not parsed_files:
         return
 
+    # Pflichtfelder immer aufnehmen, auch wenn sie in keiner Datei befüllt sind
+    if has_hl7:
+        all_fields_set.update(ALWAYS_SHOW_FIELDS)
+
     # 2. Feld-Sortierung
     if has_hl7:
         all_fields_ordered = sorted(list(all_fields_set), key=get_field_sort_key)
@@ -376,6 +383,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
     fill_data_even    = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
     fill_data_odd     = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
     fill_raw_cell     = PatternFill(start_color="F2F4F7", end_color="F2F4F7", fill_type="solid")
+    fill_always       = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
 
     thin_border = Border(
         left=Side(style='thin', color='D9D9D9'),
@@ -454,8 +462,16 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
                 long_name = p_data[f_id]['long_name']
                 break
 
+        # Pflichtfeld ohne Wert in allen Dateien: Segment und Bezeichnung selbst setzen
+        is_always = has_hl7 and f_id in ALWAYS_SHOW_FIELDS
+        if is_always and not seg_name:
+            seg_name = f_id.split('_')[0]                 # "PV1"
+            long_name = COMPONENT_NAMES.get(f_id, f_id)
+
         remark = field_descriptions.get(f_id, "")
         row_fill = fill_data_even if row_idx % 2 == 0 else fill_data_odd
+        if is_always:
+            row_fill = fill_always
 
         c_seg = ws.cell(row=row_idx, column=1, value=seg_name)
         c_seg.font, c_seg.fill = font_seg_col, fill_seg_col
@@ -470,7 +486,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
         c_name.alignment = Alignment(horizontal="left", vertical="center")
 
         c_remark = ws.cell(row=row_idx, column=4, value=remark)
-        c_remark.font, c_remark.fill = font_remark_col, fill_remark_col
+        c_remark.font, c_remark.fill = font_remark_col, (fill_always if is_always else fill_remark_col)
         c_remark.alignment = Alignment(horizontal="left", vertical="center")
 
         for file_idx, (_, p_data, _) in enumerate(parsed_files, start=5):
