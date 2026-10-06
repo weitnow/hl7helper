@@ -19,6 +19,13 @@ BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Patientenklasse: 0003 = allgeme
 
 PID_3 = SuvaPID~OpalePID
 PV1_3 = Siehe PV1_3.1 bis PV1_3.7
+PV1_3.1 = Fachabteilung
+PV1_3.2 = Zimmernummer
+PV1_3.3 = Bettplatz
+PV1_3.4 = Standort
+PV1_3.5 = Status des Orts
+PV1_3.6 = Art des Aufenthalts
+PV1_3.7 = Gebaeude
 PV1_3.1 = Es darf nicht Stockwerk (STK1) sondern nur Zahl z.B. 1 stehen
 PV1_20 = Zahl erwartet (z.B. 0003) 
 
