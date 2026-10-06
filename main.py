@@ -5,6 +5,7 @@ import shutil
 import openpyxl
 import sys
 import subprocess
+from datetime import datetime
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from hl7apy.parser import parse_message
@@ -21,6 +22,13 @@ except ImportError:
 #TESTFILE_DIR = "testfile"
 TESTFILE_DIR = r"C:\Users\A0047444\Downloads"
 TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat', '.bin')
+
+# Dateiendungen für das Einlesen der Daten bzw. Mapping-Dateien
+DATA_EXTENSIONS = ('.hl7', '.dat', '.txt', '.csv')
+MAPPING_EXTENSIONS = ('.map', '.mapping')
+
+# Maximale Anzahl aufbewahrter Sicherheitskopien von manual.xlsx
+MAX_BACKUPS = 2
 
 # Standard-Reihenfolge der HL7-Segmente für die Sortierung
 STANDARD_SEGMENT_ORDER = [
@@ -514,6 +522,114 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
 
 
 # ==========================================
+# SICHERUNG MANUELLER BLÄTTER IN manual.xlsx
+# ==========================================
+
+def backup_static_file(static_excel_path):
+    """Legt im Ordner von static_excel_path eine Sicherheitskopie mit Zeitstempel an
+    (z. B. manual_backup_20261006_073300.xlsx). Gibt den Pfad der Kopie zurück,
+    None wenn keine Datei zu sichern war. Wirft eine Exception, wenn die Kopie scheitert."""
+    if not os.path.exists(static_excel_path):
+        return None
+
+    folder = os.path.dirname(static_excel_path) or "."
+    stem, ext = os.path.splitext(os.path.basename(static_excel_path))
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = os.path.join(folder, f"{stem}_backup_{stamp}{ext}")
+
+    shutil.copy2(static_excel_path, backup_path)
+    print(f"Sicherheitskopie erstellt: '{backup_path}'")
+
+    # Alte Sicherungen aufräumen: nur die neuesten MAX_BACKUPS behalten
+    pattern = re.compile(
+        rf"^{re.escape(stem)}_backup_\d{{8}}_\d{{6}}{re.escape(ext)}$", re.IGNORECASE
+    )
+    backups = sorted(f for f in os.listdir(folder) if pattern.match(f))  # Zeitstempel -> sortierbar
+    for old in backups[:-MAX_BACKUPS]:
+        try:
+            os.remove(os.path.join(folder, old))
+            print(f"Alte Sicherheitskopie gelöscht: '{old}'")
+        except OSError as e:
+            print(f"WARNUNG: '{old}' konnte nicht gelöscht werden: {e}")
+
+    return backup_path
+
+
+def sync_manual_sheets(output_excel_path, static_excel_path, import_dir):
+    """Sichert alle Blätter der bestehenden Ausgabedatei, die NICHT aus data/ erzeugt
+    wurden, in die statische Vorlage (static_excel_path wird überschrieben).
+
+    Schutzmechanismen:
+    - Ohne Pillow wird manual.xlsx NICHT überschrieben (sonst gingen Bilder dauerhaft verloren).
+    - Vor dem Überschreiben wird immer zuerst eine Sicherheitskopie angelegt.
+    - Gespeichert wird erst in eine temporäre Datei und dann ersetzt, damit manual.xlsx
+      bei einem Fehler nicht halb geschrieben zurückbleibt.
+    Gibt True zurück, wenn manual.xlsx neu geschrieben wurde."""
+    if not os.path.exists(output_excel_path):
+        return False
+
+    if not HAS_PILLOW:
+        print(f"WARNUNG: Pillow fehlt - '{static_excel_path}' wird NICHT überschrieben, "
+              f"damit keine Bilder verloren gehen.")
+        return False
+
+    # Namen der Blätter, die der Code aus data/ erzeugt
+    generated = set()
+    if os.path.isdir(import_dir):
+        for root, dirs, files in os.walk(import_dir):
+            if root == import_dir:
+                continue
+            if any(f.lower().endswith(DATA_EXTENSIONS) for f in files):
+                generated.add(clean_sheet_title(os.path.basename(root)))
+
+    try:
+        wb = openpyxl.load_workbook(output_excel_path)
+    except Exception as e:
+        print(f"WARNUNG: '{output_excel_path}' konnte nicht gelesen werden, "
+              f"manual.xlsx bleibt unverändert: {e}")
+        return False
+
+    for name in list(wb.sheetnames):
+        if name in generated:
+            wb.remove(wb[name])
+
+    if not wb.sheetnames:
+        print("Keine manuellen Blätter in der Ausgabedatei gefunden, manual.xlsx bleibt unverändert.")
+        return False
+
+    # Aktives Blatt zurücksetzen (das bisherige könnte entfernt worden sein)
+    wb.active = 0
+    for i, sheet in enumerate(wb.worksheets):
+        sheet.sheet_view.tabSelected = (i == 0)
+
+    os.makedirs(os.path.dirname(static_excel_path) or ".", exist_ok=True)
+
+    # ZUERST: Sicherheitskopie der bestehenden manual.xlsx
+    try:
+        backup_static_file(static_excel_path)
+    except Exception as e:
+        print(f"FEHLER: Sicherheitskopie von '{static_excel_path}' fehlgeschlagen: {e}")
+        print("manual.xlsx wird aus Sicherheitsgründen NICHT überschrieben.")
+        return False
+
+    tmp_path = static_excel_path + ".tmp"
+    try:
+        wb.save(tmp_path)
+        os.replace(tmp_path, static_excel_path)
+        print(f"{len(wb.sheetnames)} manuelle(s) Blatt/Blätter in '{static_excel_path}' gesichert.")
+        return True
+    except PermissionError:
+        print(f"FEHLER: '{static_excel_path}' ist gesperrt (in Excel geöffnet?). Abbruch.")
+        raise
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+
+# ==========================================
 # HAUPTFUNKTION / STEUERUNG
 # ==========================================
 
@@ -531,8 +647,13 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
         print("\n" + "!"*80)
         print("WARNUNG: Das Python-Paket 'Pillow' (PIL) ist NICHT installiert!")
         print("Ohne Pillow entfernt openpyxl automatisch alle Screenshots/Bilder aus der Excel-Datei!")
+        print("manual.xlsx wird in diesem Lauf NICHT überschrieben.")
         print("Bitte installiere es bei Bedarf mit:  pip install pillow")
         print("!"*80 + "\n")
+
+    # Manuelle Blätter aus der letzten Ausgabedatei zurück in manual.xlsx sichern
+    # (mit Sicherheitskopie, und nur wenn Pillow vorhanden ist)
+    sync_manual_sheets(output_excel_path, static_excel_path, import_dir)
 
     # Optional: Testdateien in einen bestimmten Unterordner kopieren
     if target_folder:
@@ -544,9 +665,6 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
             return
 
     created_sheets = {}
-
-    data_extensions = ('.hl7', '.dat', '.txt', '.csv')
-    mapping_extensions = ('.map', '.mapping')
 
     # 1. Basis-Arbeitsmappe laden:
     if os.path.exists(static_excel_path):
@@ -568,7 +686,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
 
             matching_files = [
                 os.path.join(root, f) for f in files
-                if f.lower().endswith(data_extensions)
+                if f.lower().endswith(DATA_EXTENSIONS)
             ]
 
             if not matching_files:
@@ -576,7 +694,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
 
             mapping_file = None
             for f in files:
-                if f.lower().endswith(mapping_extensions):
+                if f.lower().endswith(MAPPING_EXTENSIONS):
                     mapping_file = os.path.join(root, f)
                     break
 
