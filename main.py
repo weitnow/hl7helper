@@ -705,6 +705,8 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
                 if f.lower().endswith(DATA_EXTENSIONS)
             ]
 
+            matching_files.sort(key=lambda p: os.path.basename(p).swapcase()) #nach Dateiname sortieren
+
             if not matching_files:
                 continue
 
