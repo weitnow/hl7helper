@@ -1,6 +1,6 @@
 # Beispiel für mapping.map
 
-#BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, Financal Class: 3 = allgemein, 1 = privat,  2 = halbprivat
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
 
@@ -16,6 +16,8 @@
 # Feld 2=Kundenname
 # Feld 3=Erstellungsdatum
 
+PV1_2 = I=stationaer,O=ambulant
+PV2_41.3 = Spitalspezifisches Feld
 
 PID_3 = SuvaPID~OpalePID
 PV1_3 = Siehe PV1_3.1 bis PV1_3.7
@@ -26,5 +28,6 @@ PV1_3.4 = Standort
 PV1_3.5 = Status des Orts
 PV1_3.6 = Art des Aufenthalts
 PV1_3.7 = Gebaeude
-#PV1_20 = Textformat erwartet (z.B. allgemein) 
+PV1_19 = FID
+PV1_20 = Zahl erwartet (z.B. 3) 
 
