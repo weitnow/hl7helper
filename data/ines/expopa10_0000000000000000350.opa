@@ -1,8 +1,0 @@
-500011|2|208000100|1|Scheuber|Laurin|01/01/1990|1|Männlich|1|Ledig||CH|Schweiz||D|Deutsch|001|Herr||004|römisch-katholisch|||||||0|0|3|RKB|STRH|Stationär ST-Reha|09/09/2026|2|Angemeldet, geplant|||020|Unfall|100|Erwachsene kantonal|MSKAR|Stationär MSK AR|MSK|MSK|STK1|Stock 1|118|3|0|10|Allgemein|40|Stationär allgemein KVG|10|KVG|1740|||||||||||||||0||19/11/2026|1|Auf Initiative des Behandelnden|1|Zuhause|0005|2|Ambulante Behandlung|||||||2||||||||118.|7565405593906||||||||||||||||||||0||0|0||14|23/09/2026|0000|0|
-500011|2|208000100|R|STRH|Stationär ST-Reha|020|Unfall|MSKAR|Stationär MSK AR|MSK|MSK|STK1|Stock 1|118|3|20|Halbprivat||10/09/2026|1000||0000||0000||0||0000||118.|no|||||||||
-500011|2|208000100|L|PAT|Patient|Y|Y|001|Herr|Scheuber Laurin||Phantasiestrasse 44||8918|00|Unterlunkhofen|AG|CH||||||||1||||CHE|||||||||||
-500011|2|208000100|M|ZUW|Zuweiser|3|Keusch (Testarzt) Christian|Keusch (Testarzt)|Christian|001|Herr|Arztstrasse 7||5444||Künten|AG|CH|+41566111617||||arzt@gmail.com|X123456|7612345000008|||||1|||Arzt|Arzt|||||||
-500011|2|208000100|M|HAU|Hausarzt|3|Keusch (Testarzt) Christian|Keusch (Testarzt)|Christian|001|Herr|Arztstrasse 7||5444||Künten|AG|CH|+41566111617||||arzt@gmail.com|X123456|7612345000008|||||2|||Arzt|Arzt|||||||
-500011|2|208000100|G|2|1|N|400026|Helvetia Versicherungen||Wuhrmattstrasse 19||4103|00|Bottmingen||CH|12212214||||SPA|Patient stationär|||0|7601003000221|||+41582802022|||||||||
-500011|2|208000100|G|3|1|N|400001|Agrisano UVG||Laurstrasse 10||5201|00|Brugg AG||CH|66564645646546||||SPA|Patient stationär|||0|7601003101362|||+41564617111|||||||||
-500011|2|208000100|4||10/09/2026|13:27:57|OPALE||||||||
