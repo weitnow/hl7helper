@@ -3,6 +3,7 @@
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, 
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
+#BESCH_ANPASSUNG= 
 
 # Format: Feld-ID=Beschreibung
 

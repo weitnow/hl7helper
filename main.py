@@ -746,7 +746,8 @@ def extract_mapping_descriptions(file_path):
     meta_info = {
         'BESCH_BESONDERHEITEN': '',
         'BESCH_LOGIK_ORCHESTRA': '',
-        'BESCH_LOGIK_UMSYSTEM': ''
+        'BESCH_LOGIK_UMSYSTEM': '',
+        'BESCH_ANPASSUNG': ''
     }
 
     if not file_path or not os.path.exists(file_path):
@@ -1027,8 +1028,11 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
     meta_keys = [
         ("Besonderheiten", meta_info.get('BESCH_BESONDERHEITEN', '')),
         ("Logik Orchestra", meta_info.get('BESCH_LOGIK_ORCHESTRA', '')),
-        ("Logik Umsystem", meta_info.get('BESCH_LOGIK_UMSYSTEM', ''))
+        ("Logik Umsystem", meta_info.get('BESCH_LOGIK_UMSYSTEM', '')),
+        ("Anpassung", meta_info.get('BESCH_ANPASSUNG', ''))
     ]
+    # Nur Einträge anzeigen, die in der map-Datei nicht auskommentiert (und nicht leer) sind
+    meta_keys = [(label, val) for label, val in meta_keys if val]
 
     for idx, (label, val) in enumerate(meta_keys, start=1):
         ws.merge_cells(start_row=idx, start_column=1, end_row=idx, end_column=3)
@@ -1052,7 +1056,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
             ws.cell(row=idx, column=c_i).border = thin_border
 
     # 5. TABELLEN-HEADER ERSTELLEN
-    header_row = 5
+    header_row = len(meta_keys) + 2 if meta_keys else 1
 
     ws.cell(row=header_row, column=1, value="Segment/Typ").font = font_file_header
     ws.cell(row=header_row, column=1).fill = fill_file_header
@@ -1077,7 +1081,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
         c.alignment = Alignment(horizontal="center", vertical="center")
 
     # 6. DATENZEILEN BEFÜLLEN
-    start_data_row = 6
+    start_data_row = header_row + 1
     last_data_row = start_data_row
 
     for row_offset, f_id in enumerate(all_fields_ordered):
@@ -1163,7 +1167,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
             max_len = max(max_len, len(val_str))
         ws.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 50)
 
-    ws.freeze_panes = 'E6'
+    ws.freeze_panes = f'E{header_row + 1}'
 
 
 # ==========================================

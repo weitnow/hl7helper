@@ -3,6 +3,7 @@
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Financal Class: 3 = allgemein, 1 = privat,  2 = halbprivat
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
+#BESCH_ANPASSUNG=
 
 # Format: Feld-ID=Beschreibung
 

@@ -3,6 +3,7 @@
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, Financal Class: (10, 12, 13) = allgemein, (20, 23) = halbprivat, 30 = privat, Fachabteilung (z.B. OHR1A) wird in PV2_41.3 geliefert, CRM-Gpartnummer (SUVA-PID) wird in ZP__6 geliefert, allerdings nur bei Update Patientendaten (nicht Update Falldaten)
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
+#BESCH_ANPASSUNG=
 
 # Format: Feld-ID=Beschreibung
 

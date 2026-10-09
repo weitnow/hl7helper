@@ -3,6 +3,7 @@
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Patientenklasse: 0003 = allgemein, 0001 = privat,  0002 = halbprivat
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
+#BESCH_ANPASSUNG=
 
 # Format: Feld-ID=Beschreibung
 
