@@ -1,6 +1,6 @@
 # Beispiel für mapping.map
 
-BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Patientenklasse: 3 = allgemein, 1 = privat,  2 = halbprivat
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Patientenklasse: 3 = allgemein, 1 = privat,  2 = halbprivat, im Gegensatz zu allen anderen Umsystemen wird die INES-Abteilung im Feld PV1_3.1 und nicht im PV1_3.4 geliefert
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
 

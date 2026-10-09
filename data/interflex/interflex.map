@@ -1,8 +1,8 @@
 # Beispiel für mapping.map
 
-BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, 1 = stationär, 2 = ambulant
-#BESCH_LOGIK_ORCHESTRA=
-#BESCH_LOGIK_UMSYSTEM=Bei stationären wie auch ambulanten Patienten wird in der Regel immer der Besucher (Stammdaten des Patienten), sowie auch der Besuch (mit Gültigkeitsdauer, Zimmer, Bett, Zutrittsrechten etc.) angelegt. Allerdings gibt es in Interflex eine Logik, dass bei ambulanten Fällen der Besuch nur angelegt wird, wenn die Abteilung in Interflex unter ambulante Fälle erfasst ist.
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, 1 = stationär, 2 = ambulant, Pfl. OE: In SAP steht hier STK_3, geliefert wird 3. In Opale wird die Abteilung geliefert
+#BESCH_LOGIK_ORCHESTRA=Orchestra muss Eintritts- und Austrittsdatum in folgendem Format senden 4 Stellen (YYYYMMDDHHMMSS)
+BESCH_LOGIK_UMSYSTEM=Bei stationären wie auch ambulanten Patienten wird in der Regel immer der Besucher (Stammdaten des Patienten), sowie auch der Besuch (mit Gültigkeitsdauer, Zimmer, Bett, Zutrittsrechten etc.) angelegt. Allerdings gibt es in Interflex eine Logik, dass bei ambulanten Fällen der Besuch nur angelegt wird, wenn die Abteilung in Interflex unter ambulante Fälle erfasst ist.
 
 # Format: Feld-ID=Beschreibung
 
@@ -21,11 +21,11 @@ Feld 6=Ort
 Feld 7=OpalePID
 Feld 8=Geburtsdatum
 Feld 9=Geschlecht
-Feld 10=Abteilung
+Feld 10=Pfl OE
 Feld 11=Zimmer.Bett
 Feld 12=TCPOS-Nummer
-Feld 13=Eintrittsdatum
-Feld 14=Austrittsdatum
+Feld 13=Eintrittsdatum YYYYMMDDHHMMSS
+Feld 14=Austrittsdatum YYYYMMDDHHMMSS
 Feld 15=Ambulant_Stationär
 
 

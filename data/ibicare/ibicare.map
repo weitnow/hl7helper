@@ -1,7 +1,7 @@
 # Beispiel für mapping.map
 
-BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, Financal Class: 3 = allgemein, 1 = privat,  2 = halbprivat
-#BESCH_LOGIK_ORCHESTRA=
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, Financal Class: 3 = allgemein, 1 = privat,  2 = halbprivat, im Gegensatz zu anderen Umsystemen wird die Ines-Abteilung ohne F_ geliefert
+#BESCH_LOGIK_ORCHESTRA=Ein allfaelliges F_ in der Ines-Abteilung wird entfernt, weil IBIcare mit _ nicht umgehen kann
 #BESCH_LOGIK_UMSYSTEM=
 
 # Format: Feld-ID=Beschreibung
