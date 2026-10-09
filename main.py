@@ -21,10 +21,10 @@ except ImportError:
 # Quellordner und erlaubte Endungen für das automatische Kopieren der Testdateien
 #TESTFILE_DIR = "testfile"
 TESTFILE_DIR = r"C:\Users\A0047444\Downloads"
-TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat', '.bin')
+TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat', '.opa', '.bin')
 
 # Dateiendungen für das Einlesen der Daten bzw. Mapping-Dateien
-DATA_EXTENSIONS = ('.hl7', '.dat', '.txt', '.csv')
+DATA_EXTENSIONS = ('.hl7', '.dat', '.txt', '.csv', '.opa')
 MAPPING_EXTENSIONS = ('.map', '.mapping')
 
 # Maximale Anzahl aufbewahrter Sicherheitskopien von manual.xlsx
@@ -52,6 +52,550 @@ COMPONENT_NAMES = {
 ALWAYS_SHOW_FIELDS = list(COMPONENT_NAMES.keys())   # PV1_3.1 ... PV1_3.7
 
 
+# ==========================================
+# OPA-FORMAT (EXPOPA10, Pipe-getrennt, ein Recordtyp pro Zeile)
+# Aufbau je Zeile: PID | FID | Dossiernummer | Recordtyp | weitere Felder ...
+# Feldnamen gemäss Schnittstellenbeschreibung "export10_d" (Stand 2025-04-01)
+# ==========================================
+OPA_DELIMITER = '|'
+OPA_RECORD_TYPE_POS = 4          # Position (1-basiert) des Recordtyps in jeder Zeile
+
+# Reihenfolge der Recordtypen für die Sortierung (entspricht der Spezifikation)
+OPA_RECORD_ORDER = ['1', 'R', '2', '3', 'I', 'L', 'M', 'G', '!', 'T', 'P', 'S', '4']
+
+OPA_RECORD_TITLES = {
+    '1': 'Pat-Fall', 'R': 'Reservation', '2': 'Verlegungen', '3': 'Urlaube',
+    'I': 'Eingriffe', 'L': 'Adressen', 'M': 'Ärzte', 'G': 'Garanten',
+    '!': 'Alarme', 'T': 'Beziehungen', 'P': 'Spez. Patient', 'S': 'Spez. Fall',
+    '4': 'Ende',
+}
+
+# Feldnamen je Recordtyp; Index 0 = Position 1
+OPA_FIELD_NAMES = {
+    '1': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Name',
+        'Vorname',
+        'Geburtsdatum',
+        'Geschlecht Code',
+        'Geschlecht Bezeichnung',
+        'Zivilstand Code',
+        'Zivilstand Bezeichnung',
+        'Mädchenname',
+        'Nationalität',
+        'Nationalität Bezeichnung (Land)',
+        'Heimatort',
+        'Sprache Code',
+        'Sprache Bezeichnung',
+        'Anrede Code',
+        'Anrede Bezeichnung',
+        'Alte (!) AHV-Nummer',
+        'Konfession Code',
+        'Konfession Bezeichnung',
+        'freies Feld (Zone)',
+        'Statistikzone 1 Code',
+        'Statistikzone 1 Bezeichnung',
+        'Name des Vaters/Ehemannes',
+        'Name der Mutter',
+        'Passnummer',
+        'Pass ausgestellt durch',
+        'Anzahl Kinder',
+        'Status der Aufnahme',
+        'Code Mandant / Firma',
+        'Eintrittstyp Code',
+        'Eintrittstyp Bezeichnung',
+        'Eintrittsdatum',
+        'Eintrittsmodus Code',
+        'Eintrittsmodus Bezeichnung',
+        'Herkuntscode',
+        'Herkunftsbezeichnung',
+        'Eintrittsart Code',
+        'Eintrittsart Bezeichnung',
+        'Taxentyp Code',
+        'Taxentyp Bezeichnung',
+        'Fall Code',
+        'Fall Bezeichnung',
+        'Abteilung Code',
+        'Abteilung Bezeichnung',
+        'Einheit Code',
+        'Einheit Bezeichnung',
+        'Zimmer',
+        'Bett',
+        'Telephon',
+        'Klasse Code',
+        'Klasse Bezeichnung',
+        'Tarif Code',
+        'Tarif Bezeichnung',
+        'Garantenart Code',
+        'Garantenart Bezeichnung',
+        'Eintrittszeit',
+        'einweisende Instanz Code',
+        'einweisende Instanz Bezeichnung',
+        'Statistikzone 2 Code',
+        'Statistikzone 2 Bezeichnung',
+        'Statistikzone 3 Code',
+        'Statistikzone 3 Bezeichnung',
+        'Statistikzone 4 Code',
+        'Statistikzone 4 Bezeichnung',
+        'Statistikzone 5 Code',
+        'Statistikzone 5 Bezeichnung',
+        'Statistikzone 6 Code',
+        'Statistikzone 6 Bezeichnung',
+        'Diagnose Code',
+        'Diagnise Bezeichnung',
+        'Flag: Fall Fakturiert',
+        'RESERVE',
+        'Austrittsdatum',
+        'Austrittsart /-modus Code',
+        'Austrtittsart /-modus Bezeichnung',
+        'Bestimmung Code',
+        'Bestimmung Bezeichnung',
+        'Austrittszeit',
+        'Behandlung nach Austritt Code',
+        'Behandlung nach Austritt Bezeichnung',
+        'Hauptdiagnose',
+        'Hauptbehandlung',
+        'Todesdatum',
+        'Todeszeit',
+        'Flag: Schlechter Zahler',
+        'RESERVE',
+        'Mutationsart',
+        'ehemalige PID',
+        'ehemalige FID',
+        'RESERVE',
+        'Patienten-Nr. (PID) der Mutter',
+        'Fall-Nr (FID) der Mutter',
+        'Dossier-Nr (DID) der Mutter',
+        'Gewicht',
+        'Alias vom Zimmer',
+        'Neue AHV-Nummer (N13)',
+        'Name des Parter/Ehegatten',
+        'Notfall Telefonnummer 1',
+        'Notfall Telefonnummer 2',
+        'Militärischer Grad',
+        'Zimmernummer der Mutter',
+        'Geburtsort (Ortschaft)',
+        'Dossier-Nr vom frührenden Fall',
+        'Datum vom Splitting DRG',
+        'Grund für die Fallzusammenführung',
+        'Patienten-Nr. (PID) des Umsystem bei Extrener Falleröffnung',
+        'Fall- / Dossier-Nr. (FID/DID) des Umsystem bei Extrener Falleröffnung',
+        'Inhalt Feld "Bei" Telefon Notfall 1 (aus Zusatz-Identität Patient)',
+        'Inhalt Feld "Bei" Telefon Notfall 2 (aus Zusatz-Identität Patient)',
+        'Fakturiere DRG / PCG',
+        'Statistikzone 7 Code',
+        'Statistikzone 7 Bezeichnung',
+        'RESERVE',
+        'RESERVE',
+        'EPD Vorhanden beim Patient',
+        'Flag: Patient wünscht kein EPD',
+        'Datum der letzten Anfrage',
+        'Zulassen Dokumentenversand EPD (B2C)',
+        'Zulassen Dokumentenversand Stammgemeinschaft (B2B)',
+        'Theoretischer Eintritt (ehem. Theoretischer Austritt)',
+        'Voraussichtliche Dauer vom Aufenthalt in Tagen',
+        'Vorgesehnes Austrittsdatum',
+        'Vorgesehene Austrittszeit',
+        'Flag "Geplanter Austritt bestätigt"',
+    ],
+    'R': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Eintrittstyp Code',
+        'Eintrittstyp Bezeichnung',
+        'Eintrittsart Code',
+        'Eintrittsart Bezeichnung',
+        'Fall Code',
+        'Fall Bezeichnung',
+        'Abteilung Code',
+        'Abteilung Bezeichnung',
+        'Pflegeeinheit Code',
+        'Pflegeeinheit Bezeichnung',
+        'Zimmer (vorgesehenes)',
+        'Bett (vorgesehenes)',
+        'Klasse Code',
+        'Klasse Bezeichnung',
+        'RESERVE',
+        'Eintrittsdatum (vorgesehenes)',
+        'Eintrittszeit (vorgesehen)',
+        'Datum Vorkonsult. Anästhesie',
+        'Zeit Vorkonsult. Anästhesie',
+        'Datum des Eingriffs',
+        'Zeit des Eingriffs',
+        'Operationssaal',
+        'Vorgesehene Aufenthaltsdauer',
+        'Betreff Memo (Kommentar) zur Reservation',
+        'Eingriffsdauer',
+        'RESERVE',
+        'Alias vom Zimmer aus Opale Zimmerstamm',
+        'Flag: Reservation aktiv/inaktiv',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    '2': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Sequenznummer',
+        'Verlegungsdatum',
+        'Verlegungszeit',
+        'Fall Code',
+        'Fall Bezeichnung',
+        'Abteilung Code',
+        'Abteilung Bezeichnung',
+        'Zimmer',
+        'Einheit Code',
+        'Einheit Bezeichnung',
+        'Bett',
+        'Telephon',
+        'Klasse Code',
+        'Klasse Bezeichnung',
+        'Tarif Code',
+        'Tarif Bezeichnung',
+        'Garantenart Code',
+        'Garantenart Bezeichnung',
+        'Taxentyp Code',
+        'Taxentyp Bezeichnung',
+        'Arztnummer (behandelnder)',
+        'Flag Aufschiebung',
+        'Flag "Separate Fakturierung"',
+        'Statistikzone 6 Code',
+        'Statistikzone 6 Bezeichnung',
+        'Diagnose Code',
+        'Diagnise Bezeichnung',
+        'Verlegung annuliert',
+        'RESERVE',
+        'Alias vom Zimmer gemäss Opale Zimmerstamm',
+        'Zeit Pflege 100%',
+        'CSB Minuten',
+        'Plegezeit ohne CSB',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    '3': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Datum Urlaub Start',
+        'Zeit Urlaub Start',
+        'Datum Urlaub Ende',
+        'Zeit Urlaub Ende',
+        'Klasse Code',
+        'Klasse Bezeichnung',
+        'Austrittsmodus Code',
+        'Austrittsmodus Bezeichnung',
+        'Bestimmung Code',
+        'Bestimmung Bezeichnung',
+        'Abteilung (Bestimmung) Code',
+        'Abteilung (Bestimmung) Bezeichnung',
+        'Bemerkung',
+        'Sequenznummer',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'I': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Arztnummer (behandelnder)',
+        'Arztname',
+        'Pflegedatum',
+        'Operationsdatum',
+        'Operationszeit',
+        'Konsultationsdatum Prä-Anästhesie',
+        'Konsultationszeit Prä-Anästhesie',
+        'Operationsdauer',
+        'Operationssaal',
+        'Anästhesistnummer',
+        'Anästhesistname',
+        'Anästhesisttyp Code',
+        'Anästhesisttyp Bezeichnung',
+        'Operation 1',
+        'Operation 2',
+        'Operation 3',
+        'Operation 4',
+        'Operation 5',
+        'Diagnose 1',
+        'Diagnose 2',
+        'Diagnose 3',
+        'Diagnose 4',
+        'Diagnose 5',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'L': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Adressentyp Code',
+        'Adressentyp Bezeichnung',
+        'Korrespondenzflag',
+        'Fakturierungsflag',
+        'Anrede Code',
+        'Anrede Bezeichnung',
+        'Name',
+        'Zusatz',
+        'Adresse',
+        'Adresse 2',
+        'PLZ',
+        'Unterteilung PLZ (Unter-Nummer)',
+        'Ort',
+        'Kanton',
+        'Land',
+        'Telefon Privat',
+        'Telefon Beruf',
+        'e-Mail Adresse',
+        'Beruf',
+        'Arbeitgeber',
+        'Arbeitsort',
+        'RESERVE',
+        'Opale Interne Sequenznummer',
+        'Handy-Nummer',
+        'Verwandschaftsgrad Code',
+        'Verwandschaftsgrad Bezeichnung',
+        'Länder Code gemäss BfS',
+        'E-Mail Adresse Arbeitgeber',
+        'Kommentar Telefon Festnetz',
+        'Kommentar Telefon Geschäft',
+        'Kommentar Telefon Natel',
+        'Kommentar Telefon E-Mail Patient',
+        'Kommentar Telefon E-Mail Arbeitgeber',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'M': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Arzt für Aufnahme Code',
+        'Arzt für Aufnahme Bezeichnung',
+        'Arztnummer',
+        'Name und Vorname vom Arzt',
+        'Name vom Arzt',
+        'Vorname vom Arzt',
+        'Anrede Code',
+        'Anrede Bezeichnung',
+        'Adresse',
+        'RESERVE',
+        'PLZ',
+        'RESERVE',
+        'Ort',
+        'Kanton',
+        'Land',
+        'Telefon 1',
+        'Telefon 2',
+        'Telefon 3',
+        'Telefon 4',
+        'E-Mail Adresse',
+        'Konkordats Nummer',
+        'EAN / GLN Nummer',
+        'RESERVE',
+        'Arzttyp Code',
+        'Arzttyp Bezeichnung',
+        'RESERVE',
+        'Opale Interne Sequenznummer',
+        'Telefonnummer Zentrale',
+        'Externe ID vom Arzt',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'G': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Priorität',
+        'Unterprioritär (Sequenz der Priorität)',
+        'Flag: "Garant inaktiv"',
+        'Garantennummer',
+        'Garantenname',
+        'Zusatz',
+        'Adresse',
+        'Adresse 2',
+        'PLZ',
+        'Unterteilung PLZ (Unter-Nummer)',
+        'Ort',
+        'Kanton',
+        'Land',
+        'Policenummer',
+        'Gültig-bis-Datum der Kostendeckung',
+        'Klasse Code',
+        'Klasse Bezeichnung',
+        'Fakturierung Code',
+        'Fakturierung Bezeichnung',
+        'Unfallsnummer',
+        'Unfallsdatum',
+        'Versichertenkarten Nummer',
+        'EAN Nummer vom Garant',
+        'RESERVE',
+        'Gültig ab Datum der Kostendeckung',
+        'Telefonnummer',
+        'Faxnummer',
+        '1. E-Mail Adresse vom Garant',
+        'Bemerkung zum Garant auf dem Aufenthalt',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    '!': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Alarmnummer',
+        'Alarmbezeichnung',
+        'Alarmbemerkung / -meldung',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'T': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Verhältnis zu Patienten 1 Code',
+        'Verhältnis zu Patienten 1 Bezeichnung',
+        'Patienten-Nr du für den die Beziehung gilt',
+        'Verhältnis zu Patienten 2 Code',
+        'Verhältnis zu Patienten 2 Bezeichnung',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+    'P': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Zone 00',
+        'Zone 01',
+        'Zone 02',
+        'Zone 03',
+        'Zone 04',
+        'Zone 05',
+        'Zone 06',
+        'Zone 07',
+        'Zone 08',
+        'Zone 09',
+        'Zone 10',
+        'Zone 11',
+        'Zone 12',
+        'usw.',
+    ],
+    'S': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'Zone 00',
+        'Zone 01',
+        'Zone 02',
+        'Zone 03',
+        'Zone 04',
+        'Zone 05',
+        'Zone 06',
+        'Zone 07',
+        'Zone 08',
+        'Zone 09',
+        'Zone 10',
+        'Zone 11',
+        'Zone 12',
+        'usw.',
+    ],
+    '4': [
+        'Patientennummer (PID)',
+        'Fallnummer (FID)',
+        'Dossiernummer',
+        'Aufeichnungstyp',
+        'RESERVE',
+        'Sende Datum des Datensatz EXPOPA10',
+        'Sende Zeit des Datensatz EXPOPA10',
+        'Herkunft / Ursprung der Daten',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+        'RESERVE',
+    ],
+}
+
+
 def open_file(path):
     """Öffnet eine Datei mit dem Standardprogramm des Betriebssystems."""
     try:
@@ -65,8 +609,32 @@ def open_file(path):
         print(f"Datei konnte nicht automatisch geöffnet werden: {e}")
 
 
+def read_text(file_path):
+    """Liest eine Textdatei als str: UTF-16 (BOM), UTF-8, sonst Windows-1252/Latin-1.
+    So bleiben Umlaute auch bei Dateien in ANSI-Kodierung (z. B. OPA) erhalten."""
+    with open(file_path, 'rb') as f:
+        data = f.read()
+    if data.startswith((b'\xff\xfe', b'\xfe\xff')):
+        return data.decode('utf-16', errors='ignore').strip()
+    for enc in ('utf-8-sig', 'cp1252'):
+        try:
+            return data.decode(enc).strip()
+        except UnicodeDecodeError:
+            continue
+    return data.decode('latin-1').strip()
+
+
+def looks_like_opa(first_line):
+    """True, wenn die Zeile wie ein OPA-Record (Typ 1 oder R) aussieht:
+    PID|FID|Dossier|Recordtyp|... mit numerischer Fallnummer."""
+    parts = first_line.split(OPA_DELIMITER)
+    return (len(parts) >= 16
+            and parts[OPA_RECORD_TYPE_POS - 1].strip() in ('1', 'R')
+            and parts[1].strip().isdigit())
+
+
 def detect_extension(file_path):
-    """Erkennt anhand des Inhalts, ob eine Datei hl7, dat oder txt war. None, wenn unklar."""
+    """Erkennt anhand des Inhalts, ob eine Datei hl7, opa, dat oder txt war. None, wenn unklar."""
     with open(file_path, 'rb') as f:
         data = f.read(4096)
 
@@ -82,6 +650,8 @@ def detect_extension(file_path):
         return '.hl7'
 
     first_line = next((l for l in text.splitlines() if l.strip()), '')
+    if looks_like_opa(first_line):
+        return '.opa'
     pipes, semis = first_line.count('|'), first_line.count(';')
     if pipes == 0 and semis == 0:
         return None
@@ -89,7 +659,7 @@ def detect_extension(file_path):
 
 
 def copy_testfiles(target_dir, source_dir=TESTFILE_DIR):
-    """Kopiert die neueste hl7/txt/dat/bin-Datei aus source_dir nach target_dir.
+    """Kopiert die neueste hl7/txt/dat/opa/bin-Datei aus source_dir nach target_dir.
     .bin-Dateien werden anhand des Inhalts mit der richtigen Endung kopiert.
     Gibt die Anzahl kopierter Dateien zurück (None bei Fehler)."""
     if not os.path.isdir(source_dir):
@@ -102,7 +672,7 @@ def copy_testfiles(target_dir, source_dir=TESTFILE_DIR):
         and os.path.isfile(os.path.join(source_dir, f))
     ]
     if not candidates:
-        print(f"FEHLER: Keine .hl7/.txt/.dat/.bin-Dateien in '{source_dir}' gefunden.")
+        print(f"FEHLER: Keine .hl7/.txt/.dat/.opa/.bin-Dateien in '{source_dir}' gefunden.")
         return None
 
     # Neueste Datei anhand des Änderungsdatums
@@ -155,6 +725,17 @@ def get_field_sort_key(field_id):
     return (seg_priority, seg_idx, field_num, comp_num)
 
 
+def get_opa_sort_key(field_id):
+    """Sortier-Schlüssel für OPA-Felder: Recordtyp (Spezifikation), Wiederholung, Position.
+    Feld-IDs: '1_5', 'R_9', 'L_11', 'L[2]_11' (2. Adress-Record)."""
+    m = re.match(r'^(.+?)(?:\[(\d+)\])?_(\d+)$', field_id)
+    if not m:
+        return (99, 0, 0)
+    rtype, rep_idx, pos = m.group(1), int(m.group(2) or 1), int(m.group(3))
+    order = OPA_RECORD_ORDER.index(rtype) if rtype in OPA_RECORD_ORDER else 98
+    return (order, rep_idx, pos)
+
+
 # ==========================================
 # PARSER: MAPPING-DATEI (.map / .mapping)
 # ==========================================
@@ -196,7 +777,7 @@ def extract_mapping_descriptions(file_path):
 
 
 # ==========================================
-# PARSER: HL7 & TEXTDATEIEN (.dat, .txt, .csv)
+# PARSER: HL7, OPA & TEXTDATEIEN (.dat, .txt, .csv)
 # ==========================================
 
 def extract_hl7_fields(file_path):
@@ -262,6 +843,49 @@ def extract_hl7_fields(file_path):
     return fields_data
 
 
+def extract_opa_fields(file_path):
+    """Liest eine OPA-Datei (EXPOPA10) ein. Jede Zeile ist ein Record, der Typ steht an
+    Position 4. Feld-IDs: <Typ>_<Position>, bei wiederholten Records <Typ>[n]_<Position>
+    (z. B. L_11, L[2]_11). Leere Felder werden wie bei HL7 nicht aufgenommen.
+    Die Identitätsfelder 1-3 (PID/FID/Dossier) erscheinen nur einmal (Typ 1), das Feld 4
+    (Aufzeichnungstyp) gar nicht, da es im Segment/Typ bereits steht."""
+    fields_data = {}
+    counters = {}
+
+    for line in read_text(file_path).splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(OPA_DELIMITER)
+        if len(parts) < OPA_RECORD_TYPE_POS:
+            continue
+
+        rtype = parts[OPA_RECORD_TYPE_POS - 1].strip()
+        counters[rtype] = counters.get(rtype, 0) + 1
+        rec_idx = counters[rtype]
+
+        title = OPA_RECORD_TITLES.get(rtype, 'Unbekannt')
+        seg_display = f"{rtype} {title}" + (f" ({rec_idx})" if rec_idx > 1 else "")
+        names = OPA_FIELD_NAMES.get(rtype, [])
+
+        for pos, val in enumerate(parts, start=1):
+            val = val.strip()
+            if not val:
+                continue
+            if pos == OPA_RECORD_TYPE_POS:
+                continue
+            if pos < OPA_RECORD_TYPE_POS and not (rtype == '1' and rec_idx == 1):
+                continue
+
+            field_id = f"{rtype}[{rec_idx}]_{pos}" if rec_idx > 1 else f"{rtype}_{pos}"
+            fields_data[field_id] = {
+                'segment': seg_display,
+                'long_name': names[pos - 1] if pos <= len(names) else f"Feld {pos}",
+                'value': val
+            }
+
+    return fields_data
+
+
 def extract_text_fields(file_path):
     """Liest strukturierte Textdateien (.dat, .txt, .csv) ein."""
     fields_data = {}
@@ -303,8 +927,7 @@ def extract_text_fields(file_path):
 def read_raw_file_content(file_path):
     """Liest den exakten Rohinhalt der Datei für die Fußzeile aus."""
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            return f.read().strip()
+        return read_text(file_path)
     except Exception:
         return ""
 
@@ -319,6 +942,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
     all_fields_set = set()
     field_order_preserve = []
     has_hl7 = False
+    has_opa = False
 
     field_descriptions, meta_info = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
 
@@ -329,6 +953,9 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
             if ext == '.hl7':
                 p_data = extract_hl7_fields(fp)
                 has_hl7 = True
+            elif ext == '.opa':
+                p_data = extract_opa_fields(fp)
+                has_opa = True
             else:
                 p_data = extract_text_fields(fp)
 
@@ -352,6 +979,8 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
     # 2. Feld-Sortierung
     if has_hl7:
         all_fields_ordered = sorted(list(all_fields_set), key=get_field_sort_key)
+    elif has_opa:
+        all_fields_ordered = sorted(list(all_fields_set), key=get_opa_sort_key)
     else:
         def text_sort_key(f_name):
             num = re.findall(r'\d+', f_name)
@@ -655,7 +1284,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
     """Lädt die statische Basis-Arbeitsmappe (inkl. Grafiken/Screenshots) und erweitert sie um die dynamischen Daten-Sheets.
 
     Optional: target_folder = Name eines Unterordners in import_dir. Dann werden die
-    hl7/txt/dat-Dateien aus 'testfile' dorthin kopiert und nach dem Speichern wird
+    hl7/txt/dat/opa-Dateien aus 'testfile' dorthin kopiert und nach dem Speichern wird
     das gleichnamige Sheet direkt angezeigt.
     """
 

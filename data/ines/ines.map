@@ -1,0 +1,20 @@
+# Beispiel für mapping.map
+
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, 
+#BESCH_LOGIK_ORCHESTRA=
+#BESCH_LOGIK_UMSYSTEM=
+
+# Format: Feld-ID=Beschreibung
+
+# Für HL7-Felder:
+# PID_5=Patientenname
+# PID_7=Geburtsdatum
+# OBX_5=Laborwert Resultat
+
+# Für Text-/CSV-Dateien:
+# Feld 1=Auftragsnummer
+# Feld 2=Kundenname
+# Feld 3=Erstellungsdatum
+
+
+
