@@ -1,9 +1,9 @@
 # Beispiel für mapping.map
 
-BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja, 
+BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja
 #BESCH_LOGIK_ORCHESTRA=
 #BESCH_LOGIK_UMSYSTEM=
-#BESCH_ANPASSUNG= 
+BESCH_ANPASSUNG=In Feld 1_44 Fall Code muss der Inhalt des Feldes 1_114 Statistikzone 7 Code geliefert werden. In Feld 1_45 Fall Bezeichnung muss der Inhalt von 1_115 Statistikzone 7 Bezeichnung geliefert werden.
 
 # Format: Feld-ID=Beschreibung
 
@@ -16,6 +16,12 @@ BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja,
 # Feld 1=Auftragsnummer
 # Feld 2=Kundenname
 # Feld 3=Erstellungsdatum
+
+1_31 = 0/1 Geplant/Anmeldung, 2 Aktiv
+1_44 = Ines Abteilung Key
+1_45 = Ines Abteilung Bezeichnung
+1_46 = Ines Station Key
+1_47 = Ines Station Bezeichnung
 
 1_114 = Abteilung INES Key
 1_115 = Abteilung INES Bezeichnung

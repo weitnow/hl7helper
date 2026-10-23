@@ -1,9 +1,9 @@
 # Beispiel für mapping.map
 
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Patientenklasse: 3 = allgemein, 1 = privat,  2 = halbprivat, im Gegensatz zu allen anderen Umsystemen wird die INES-Abteilung im Feld PV1_3.1 und nicht im PV1_3.4 geliefert
-#BESCH_LOGIK_ORCHESTRA=
-#BESCH_LOGIK_UMSYSTEM=
-#BESCH_ANPASSUNG=
+#BESCH_LOGIK_ORCHESTRA= In PV1_21 wird Inhalt von PV1_4 mit Mapping geliefert werden (10 = KVG, 20 = UVG, 21 = IVG, 22 = MVG, 30 = Selbstzahler)
+BESCH_LOGIK_UMSYSTEM= Heute gibt es in SAP den Status Warten, Plan und Ist. Status Warten wird nicht an Rehatis gesendet. Status Plan und Ist schon. Status Plan wird mit Eventcode A14 an Rehatis gesendet. Opale kennt diese Status nicht. In Opale gibt es Reservationen (entspricht Status Plan) und Fälle (entspricht Status Ist). Als Ersatz für Status Warten erstellt man eine Reservation mit einem Highdate (01.01.3000). Reservationen von Opale mit mit A05 gesendet, welches Rehatis ignoriert. Wenn aus Opale eine Reservation mit A05 mit Highdate 01.01.3000 gesendet wird, muss keine Transformation des Eventcodes A05 passieren. In der Folge wird der Fall nicht in RehaTIS importiert (was korrekt ist). Wenn Reservation mit A05 ohne Highdate gesendet wird, dann soll Orchestra A05 zu A14 ändern, was dem SAP-Code für Planen entspricht. Dadurch wird der Fall in RehaTis importiert.
+BESCH_ANPASSUNG= In PV1_21 muss Inhalt von PV1_4 mit Mapping geliefert werden (10 = KVG, 20 = UVG, 21 = IVG, 22 = MVG, 30 = Selbstzahler). Logik implementieren, wenn Eventcode in MSH_9.2 = A05 und Datum in PV2_8 = 30000101100000, dann Eventcode von A05 auf A14 ändern und an RehaTIS senden.
 
 # Format: Feld-ID=Beschreibung
 
@@ -30,6 +30,7 @@ PV1_3.4 = Standort
 PV1_3.5 = Status des Orts
 PV1_3.6 = Art des Aufenthalts
 PV1_3.7 = Gebaeude
+PV1_4 = Aufnahmeart
 PV1_19 = FID
 PV1_20 = Zahl erwartet (z.B. 3) 
 

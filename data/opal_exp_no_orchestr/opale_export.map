@@ -28,7 +28,9 @@ PV1_3.3 = Bettplatz
 PV1_3.4 = Standort
 PV1_3.5 = Status des Orts
 PV1_3.6 = Art des Aufenthalts
+PV1_18 = Feld Garantenart aus Opale
 PV1_19 = FID
+PV1_21 = Feld Tarif aus Opale
 PV1_3.7 = Gebaeude
 
 ZA__2 = TCPOS-Nummer
