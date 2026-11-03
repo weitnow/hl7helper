@@ -1,9 +1,0 @@
-500051|1|208000500|1|Hoshi|Ryu|01/01/1989|1|Männlich|1|Ledig||JP|Japan||E|Englisch|001|Herr||016|andere||024|Japanisch||||0|0|1|RKB|STRH|Stationär ST-Reha||2|Angemeldet, geplant|6|Akutspital|020|Unfall| ||OHR2B|OHR2B|STK1|Stock 1|||129|1|0|30|Privat| ||10|KVG|0000|3|Arzt (Spital, Hausarzt)|||||||||1|Ausserkantonal med. indiziert|03|BESA-Stufe 3|0|||||||0000|||||||||2||||||||123A.|7567018057202||||||||||||||||||0|0|0
-500051|1|208000500|R|STRH|Stationär ST-Reha|020|Unfall|MSK|Stationär MSK|MSK|MSK|STK1|Stock 1|129|1|30|Privat||01/01/2027|0000||0000||0000||0||0000||123A.|no||||||||
-500051|1|208000500|L|PAT|Patient|Y|Y|001|Herr|Hoshi Ryu||Hauptstrasse 10b||5444|00|Künten|AG|CH|||||Muster|5454 Bellikon||1|+430788252036|||CHE|ryu.hoshi@streetfighter.ch||||||||||
-500051|1|208000500|M|ZUW|Zuweiser|200242|Arzthaus Aarau|Arzthaus Aarau||003|Firma/Institution|Bahnhofstrasse 29||5000||Aarau|AG|CH|+41 62 836 50 00||||arzthaus.aarau@hin.ch|M165819|7601002137324||200|Zuweiser Arztpraxis / Hausarzt||1|||Arzt|Arzt|||||||
-500051|1|208000500|M|KA|Kaderarzt|100048|Muminagic Emina|Muminagic|Emina|001|Herr|Mutschellenstrasse 2||5454||Bellikon|AG|CH|+41564855621|||+41 56 485 51 11|Emina.Muminagic@rehabellikon.ch|E703619|7601000863522||100|Leistungserbringer||2||64232|MA|MA|||||||
-500051|1|208000500|M|BEH|Behandelnder Arzt|100247|Herzog Melanie|Herzog|Melanie|001|Herr|Mutschellenstrasse 2||5454||Bellikon|AG|CH|+41564855659|||+41 56 485 51 11|melanie.herzog@REHABELLIKON.CH|E703619|7601007784400||100|Leistungserbringer||3||95466|MA|MA|||||||
-500051|1|208000500|G|1|1|N|400002|Allianz Suisse|||Postfach|8010|00|Zürich||CH||30/10/2026|||SPA|Patient stationär|||123123|7601003002409||22/10/2026||||||20|MTK mit Kogu|||
-500051|1|208000500|G|2|1|N|400023|Groupe Mutuel||Rue des C dres 5||1920|00|Martigny||CH|||||SPA|Patient stationär|||33322323232|7601003002980|||+41848803111|||||10|Krankenkassen mit Kogu|||
-500051|1|208000500|4||23/10/2026|14:01:30|OPALE||||||||

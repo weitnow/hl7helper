@@ -1,0 +1,6 @@
+500053|1|208000520|1|Princess|Peach|01/01/1981|2|Weiblich|4|Geschieden|Apple|CH|Schweiz||D|Deutsch|002|Frau|||||004|Französisch||||0|0|1|RKB|AMTR|Ambulant TR||2|Angemeldet, geplant|1|Zuhause|010|Krankheit| ||TR|Ambulant TagesReha|TR|TARDOCAR|ABIT|Abitare|846|1|0||| ||10|KVG|0000|||||||||||||||0|||||||0000|||||||||1||||||||A46.|7569149837340|||||||||||||||TR3AMK|TR3AMK||||0||0|0||||||
+500053|1|208000520|R|AMTR|Ambulant TR|010|Krankheit|TR|Ambulant TagesReha|TR|TARDOCAR|ABIT|Abitare|846|1||||31/12/9999|0000||0000||0000||0||0000||A46.|no|||||||||
+500053|1|208000520|L|PAT|Patient|Y|Y|002|Frau|Princess Peach||Hauptstrasse 10a||5444|00|Künten|AG|CH|+32132321322|+34334232323|peach@gmail.com||Muster|5454 Bellikon||1||||CHE|||||||||||
+500053|1|208000520|M|ZUW|Zuweiser|200002|Suva Region Süd Service Center|Suva Region Süd|Service Center|003|Firma/Institution|Postfach||6009||Luzern|LU|CH|+41 58 411 12 15||||med.reports@suva.ch||7601003000078||206|Zuweiser Suva||1|||Suva|Suva|||||||
+500053|1|208000520|G|1|1|N|400004|Assura||Avenue Charles-Ferdinand-Ramuz 70|Case Postale 9|1052|00|Mont-sur-Lausanne||CH|||||APU|Ambulant mit Umleitung an Pat.|||0|7601003001303|||+41800277872|||||10|Krankenkassen mit Kogu|||
+500053|1|208000520|4||27/10/2026|10:44:26|OPALE||||||||

@@ -1,8 +1,8 @@
 # Beispiel für mapping.map
 
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, 1 = stationär, 2 = ambulant, Pfl. OE: In SAP steht hier STK_3, geliefert wird 3. In Opale wird die Abteilung geliefert
-#BESCH_LOGIK_ORCHESTRA=Orchestra muss Eintritts- und Austrittsdatum in folgendem Format senden 4 Stellen (YYYYMMDDHHMMSS)
-BESCH_LOGIK_UMSYSTEM=Bei stationären wie auch ambulanten Patienten wird in der Regel immer der Besucher (Stammdaten des Patienten), sowie auch der Besuch (mit Gültigkeitsdauer, Zimmer, Bett, Zutrittsrechten etc.) angelegt. Allerdings gibt es in Interflex eine Logik, dass bei ambulanten Fällen der Besuch nur angelegt wird, wenn die Abteilung in Interflex unter ambulante Fälle erfasst ist.
+#BESCH_LOGIK_ORCHESTRA=Orchestra muss Eintritts- und Austrittsdatum in folgendem Format senden 4 Stellen (YYYYMMDDHHMMSS). Interflex verlangt immer ein Austrittsdatum. Logik in Orchestra, prüfe ob ein  Austrittsdatum ( PV1_45 "Discharge Date/Time" im HL7 von Opale) vorhanden ist, wenn ja nehme dieses. Wenn nein, prüfe ob ein theoretisches Austrittsdatum (PV2_9 "Expected Sicharge Date Time im HL7 von Opale) vorhanden ist, wenn ja nehme dieses. Wenn weder noch, dann setzte ein fiktives Ausgangsdatum (analog der in SAP implementierten Logik)
+BESCH_LOGIK_UMSYSTEM=Es werden nur A01, A02, A03 Events verarbeitet. A01 (Eintritt / Aufnahme): Legt den Patienten (Visitor) und/oder den Aufenthalt (Visit) neu an oder aktualisiert bestehende Daten. A02 (Verlegung): Sucht den bestehenden Besucher, aktualisiert den Aufenthalt und passt Zimmer- sowie Zutrittsrechte an. A03 (Austritt): Sucht abgelaufene Voranmeldungen, entfernt zugeordnete Zutrittsrechte, löscht Ausweiszuordnungen und entfernt den Voranmeldungs-Visit. Bei stationären wie auch ambulanten Patienten wird in der Regel immer der Besucher (Stammdaten des Patienten), sowie auch der Besuch (mit Gültigkeitsdauer, Zimmer, Bett, Zutrittsrechten etc.) angelegt. Allerdings gibt es in Interflex eine Logik, dass bei ambulanten Fällen der Besuch nur angelegt wird, wenn die Abteilung in Interflex unter ambulante Fälle erfasst ist. Es muss auch zwingend ein Austrittsdatum gesetzt sein, ansonsten wird der Fall nicht eingelesen.
 #BESCH_ANPASSUNG=
 
 # Format: Feld-ID=Beschreibung
@@ -13,7 +13,7 @@ BESCH_LOGIK_UMSYSTEM=Bei stationären wie auch ambulanten Patienten wird in der 
 # OBX_5=Laborwert Resultat
 
 # Für Text-/CSV-Dateien:
-Feld 1=Event
+Feld 1=Event, A01 für Fallanlage, A02 für Update
 Feld 2=Name
 Feld 3=Vorname
 Feld 4=Strasse
@@ -25,8 +25,8 @@ Feld 9=Geschlecht
 Feld 10=Pfl OE
 Feld 11=Zimmer.Bett
 Feld 12=TCPOS-Nummer
-Feld 13=Eintrittsdatum YYYYMMDDHHMMSS
-Feld 14=Austrittsdatum YYYYMMDDHHMMSS
+Feld 13=Eintrittsdatum YYYYMMDDHHMMSS, PFLICHTFELD
+Feld 14=Austrittsdatum YYYYMMDDHHMMSS, PFLICHTFELD
 Feld 15=Ambulant_Stationär
 
 

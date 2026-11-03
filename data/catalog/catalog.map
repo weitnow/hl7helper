@@ -1,0 +1,21 @@
+# Beispiel für mapping.map
+
+BESCH_BESONDERHEITEN=
+BESCH_LOGIK_ORCHESTRA=Im Feld 1 wird die Gruppe entfernt, so dass nur die Leistungsnummer geliefert wird. Das File für Ines wird gefilert, so dass nur Leistungen der Gruppe ME = Medikamet oder MA = Material übermittelt werden. Für IBIcare werden die Datumsfelder (Feld 2 und Feld 3) in das ISO-Format (2026-01-01) umgewandelt.
+BESCH_LOGIK_UMSYSTEM=IBICare erwartet das Datum im Iso-Format: 2026-01-01
+#BESCH_ANPASSUNG=
+
+# Format: Feld-ID=Beschreibung
+
+# Für HL7-Felder:
+# PID_5=Patientenname
+# PID_7=Geburtsdatum
+# OBX_5=Laborwert Resultat
+
+# Für Text-/CSV-Dateien:
+# Feld 1=Auftragsnummer
+# Feld 2=Kundenname
+# Feld 3=Erstellungsdatum
+
+Feld 1 = [Gruppe][Leistungsnummer]
+Feld 11 = Gruppe
