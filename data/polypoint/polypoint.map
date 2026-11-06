@@ -1,7 +1,7 @@
 # Beispiel für mapping.map
 
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Nein, Zivilstand: 1 verheirated, 2 verwitwet. Patientenart: 0001 = Privat, 0002 = halbprivat, 0003 = allgemein
-#BESCH_LOGIK_ORCHESTRA= Prüfe, ob im Feld PV1.44 ein Eintrittsdatum ist, wenn ja, nehme dieses als Aufnahmedatum. Ansonsten, prüfe ob im Feld PV2.8 ein Datum vorhanden ist und nehme dieses als Aufnahmedatum. Wenn in PV2_9 "Expected Sicharge Date Time" oder PV1_45 "Discharge Date/Time" im HL7 von Opale,  dann muss dieses ins Polypoint.dat in Feld 2 Entlassungsdatum eingefügt werden. Wenn beide Daten im HL7 von Opale ausgefüllt sind, dann hat PV1-45 Priorität
+#BESCH_LOGIK_ORCHESTRA= Prüfe, ob im Feld PV1.44 ein Eintrittsdatum ist, wenn ja, nehme dieses als Aufnahmedatum. Ansonsten, prüfe ob im Feld PV2.8 ein Datum vorhanden ist und nehme dieses als Aufnahmedatum. Wenn in PV2_9 "Expected Sicharge Date Time" oder PV1_45 "Discharge Date/Time" im HL7 von Opale,  dann muss dieses ins Polypoint.dat in Feld 25 Entlassungsdatum eingefügt werden. Wenn beide Daten im HL7 von Opale ausgefüllt sind, dann hat PV1-45 Priorität
 #BESCH_LOGIK_UMSYSTEM=
 #BESCH_ANPASSUNG=
 

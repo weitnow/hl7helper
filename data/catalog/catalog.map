@@ -19,3 +19,4 @@ BESCH_LOGIK_UMSYSTEM=IBICare erwartet das Datum im Iso-Format: 2026-01-01
 
 Feld 1 = [Gruppe][Leistungsnummer]
 Feld 11 = Gruppe
+Feld 4 = Sap.dat = Leistungsnummer
