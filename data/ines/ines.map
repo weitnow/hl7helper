@@ -1,9 +1,9 @@
 # Beispiel für mapping.map
 
 BESCH_BESONDERHEITEN=Testsystem vorhanden: Ja
-#BESCH_LOGIK_ORCHESTRA=
+BESCH_LOGIK_ORCHESTRA=In Feld 1_44 Fall Code muss der Inhalt des Feldes 1_114 Statistikzone 7 Code geliefert werden. In Feld 1_45 Fall Bezeichnung muss der Inhalt von 1_115 Statistikzone 7 Bezeichnung geliefert werden.
 #BESCH_LOGIK_UMSYSTEM=
-BESCH_ANPASSUNG=In Feld 1_44 Fall Code muss der Inhalt des Feldes 1_114 Statistikzone 7 Code geliefert werden. In Feld 1_45 Fall Bezeichnung muss der Inhalt von 1_115 Statistikzone 7 Bezeichnung geliefert werden.
+BESCH_ANPASSUNG=
 
 # Format: Feld-ID=Beschreibung
 
