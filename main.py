@@ -1,6 +1,7 @@
 import os
 import re
 import csv
+import math
 import shutil
 import openpyxl
 import sys
@@ -26,6 +27,9 @@ TESTFILE_EXTENSIONS = ('.hl7', '.txt', '.dat', '.opa', '.bin')
 # Dateiendungen für das Einlesen der Daten bzw. Mapping-Dateien
 DATA_EXTENSIONS = ('.hl7', '.dat', '.txt', '.csv', '.opa')
 MAPPING_EXTENSIONS = ('.map', '.mapping')
+GLOBAL_MAPPING_NAME = 'maptoall.map'
+GLOBAL_HL7_MAPPING_NAME = 'maptoall_hl7.map'
+OVERVIEW_SHEET_NAME = 'Logik-Übersicht'
 
 # Maximale Anzahl aufbewahrter Sicherheitskopien von manual.xlsx
 MAX_BACKUPS = 2
@@ -36,6 +40,9 @@ STANDARD_SEGMENT_ORDER = [
     'IN1', 'IN2', 'IN3', 'NK1', 'GT1', 'AL1', 'DG1', 'PR1',
     'OBX', 'NTE', 'ORC', 'OBR', 'SPM'
 ]
+
+# Erkennt HL7-Feld-IDs in .map-Dateien (z. B. MSH_9, PV2_8, PV1[2]_3.1)
+HL7_FIELD_KEY_PATTERN = re.compile(r'^[A-Z][A-Z0-9]{2}(?:\[\d+\])?_\d+')
 
 # Bezeichnungen für Komponenten (Schlüssel ohne Segment-Index, z. B. PV1_3.1)
 COMPONENT_NAMES = {
@@ -777,6 +784,41 @@ def extract_mapping_descriptions(file_path):
     return field_mapping, meta_info
 
 
+def is_hl7_mapping(field_mapping):
+    """Prüft anhand der Feld-IDs in einer .map-Datei, ob es sich um ein HL7-Mapping handelt."""
+    return any(HL7_FIELD_KEY_PATTERN.match(k) for k in field_mapping)
+
+
+def build_combined_mapping(global_mapping, hl7_global_mapping, local_mapping, uses_hl7):
+    """Führt globale Mappings (maptoall.map, bei HL7 zusätzlich maptoall_hl7.map)
+    und das systemspezifische Mapping zusammen."""
+    global_fields, global_meta = global_mapping if global_mapping else ({}, {})
+    hl7_fields, hl7_meta = (hl7_global_mapping if hl7_global_mapping else ({}, {})) if uses_hl7 else ({}, {})
+    local_fields, local_meta = local_mapping if local_mapping else ({}, {})
+
+    # Feldbemerkungen zusammenführen (zusätzliche Hinweise werden angehängt statt überschrieben)
+    field_descriptions = {}
+    for src_fields in (global_fields, hl7_fields, local_fields):
+        for k, v in src_fields.items():
+            if not v:
+                continue
+            if k in field_descriptions and field_descriptions[k] != v:
+                field_descriptions[k] = f"{field_descriptions[k]}\n{v}"
+            else:
+                field_descriptions[k] = v
+
+    # Metadaten aus maptoall.map, maptoall_hl7.map (falls HL7) und System-.map aggregieren
+    meta_info = {}
+    for key in ('BESCH_BESONDERHEITEN', 'BESCH_LOGIK_ORCHESTRA', 'BESCH_LOGIK_UMSYSTEM', 'BESCH_ANPASSUNG'):
+        parts = []
+        for val in (global_meta.get(key, ''), hl7_meta.get(key, ''), local_meta.get(key, '')):
+            if val and val not in parts:
+                parts.append(val)
+        meta_info[key] = "\n".join(parts)
+
+    return field_descriptions, meta_info
+
+
 # ==========================================
 # PARSER: HL7, OPA & TEXTDATEIEN (.dat, .txt, .csv)
 # ==========================================
@@ -937,15 +979,13 @@ def read_raw_file_content(file_path):
 # EXCEL BEFÜLLUNG (DYNAMISCHE SHEETS)
 # ==========================================
 
-def write_data_sheet(ws, file_paths, mapping_file=None):
+def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7_global_mapping=None):
     """Befüllt ein Excel-Tabellenblatt mit Metadaten, Dateidaten und Rohcode."""
     parsed_files = []
     all_fields_set = set()
     field_order_preserve = []
     has_hl7 = False
     has_opa = False
-
-    field_descriptions, meta_info = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
 
     # 1. Dateien verarbeiten
     for fp in file_paths:
@@ -972,6 +1012,11 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
 
     if not parsed_files:
         return
+
+    local_mapping = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
+    field_descriptions, meta_info = build_combined_mapping(
+        global_mapping, hl7_global_mapping, local_mapping, uses_hl7=has_hl7
+    )
 
     # Pflichtfelder immer aufnehmen, auch wenn sie in keiner Datei befüllt sind
     if has_hl7:
@@ -1049,11 +1094,13 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
         c_val = ws.cell(row=idx, column=4, value=val)
         c_val.font = font_meta_val
         c_val.fill = fill_meta_val
-        c_val.alignment = Alignment(horizontal="left", vertical="center")
+        c_val.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
         for c_i in range(4, total_cols + 1):
             ws.cell(row=idx, column=c_i).fill = fill_meta_val
             ws.cell(row=idx, column=c_i).border = thin_border
+
+        ws.row_dimensions[idx].height = max(20, (val.count('\n') + 1) * 15)
 
     # 5. TABELLEN-HEADER ERSTELLEN
     header_row = len(meta_keys) + 2 if meta_keys else 1
@@ -1120,7 +1167,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
 
         c_remark = ws.cell(row=row_idx, column=4, value=remark)
         c_remark.font, c_remark.fill = font_remark_col, (fill_always if is_always else fill_remark_col)
-        c_remark.alignment = Alignment(horizontal="left", vertical="center")
+        c_remark.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
         for file_idx, (_, p_data, _) in enumerate(parsed_files, start=5):
             val = p_data.get(f_id, {}).get('value', '')
@@ -1164,10 +1211,103 @@ def write_data_sheet(ws, file_paths, mapping_file=None):
         col_letter = get_column_letter(col[0].column)
         for cell in list(col)[header_row - 1:last_data_row]:
             val_str = str(cell.value or '')
-            max_len = max(max_len, len(val_str))
+            max_line_len = max((len(line) for line in val_str.splitlines()), default=0)
+            max_len = max(max_len, max_line_len)
         ws.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 50)
 
     ws.freeze_panes = f'E{header_row + 1}'
+
+
+def write_overview_sheet(ws, overview_entries):
+    """Erstellt ein Übersichts-Tabellenblatt über alle Systeme und deren hinterlegte Logiken."""
+    font_header   = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    font_system   = Font(name="Calibri", size=10, bold=True, color="1F4E79")
+    font_format   = Font(name="Calibri", size=10, bold=True, color="333333")
+    font_mapfile  = Font(name="Calibri", size=10, italic=True, color="333333")
+    font_text     = Font(name="Calibri", size=10, color="1F2937")
+
+    fill_header   = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
+    fill_system   = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+    fill_even     = PatternFill(start_color="F9FAFB", end_color="F9FAFB", fill_type="solid")
+    fill_odd      = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+
+    thin_border = Border(
+        left=Side(style='thin', color='D9D9D9'),
+        right=Side(style='thin', color='D9D9D9'),
+        top=Side(style='thin', color='D9D9D9'),
+        bottom=Side(style='thin', color='D9D9D9')
+    )
+
+    headers = [
+        "System",
+        "Format",
+        "Mapping-Datei",
+        "Besonderheiten",
+        "Logik Orchestra",
+        "Logik Umsystem",
+        "Anpassung",
+    ]
+    col_widths = [24, 18, 26, 45, 55, 45, 45]
+
+    for col_idx, (title, width) in enumerate(zip(headers, col_widths), start=1):
+        cell = ws.cell(row=1, column=col_idx, value=title)
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = thin_border
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    ws.row_dimensions[1].height = 24
+
+    for row_idx, entry in enumerate(overview_entries, start=2):
+        row_fill = fill_even if row_idx % 2 == 0 else fill_odd
+        meta = entry['meta_info']
+
+        values = [
+            entry['system'],
+            entry['format_label'],
+            entry['mapping_name'],
+            meta.get('BESCH_BESONDERHEITEN', ''),
+            meta.get('BESCH_LOGIK_ORCHESTRA', ''),
+            meta.get('BESCH_LOGIK_UMSYSTEM', ''),
+            meta.get('BESCH_ANPASSUNG', ''),
+        ]
+
+        max_wrapped_lines = 1
+        for col_idx, val in enumerate(values, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.border = thin_border
+
+            if col_idx == 1:
+                cell.font = font_system
+                cell.fill = fill_system
+                cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+            elif col_idx == 2:
+                cell.font = font_format
+                cell.fill = row_fill
+                cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+            elif col_idx == 3:
+                cell.font = font_mapfile
+                cell.fill = row_fill
+                cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+            else:
+                cell.font = font_text
+                cell.fill = row_fill
+                cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+
+            if val:
+                eff_width = max(col_widths[col_idx - 1] - 3, 10)
+                wrapped_lines = sum(
+                    max(1, math.ceil(len(line) / eff_width)) for line in str(val).splitlines()
+                )
+                max_wrapped_lines = max(max_wrapped_lines, wrapped_lines)
+
+        ws.row_dimensions[row_idx].height = max(22, max_wrapped_lines * 15 + 6)
+
+    if overview_entries:
+        ws.auto_filter.ref = f"A1:G{len(overview_entries) + 1}"
+
+    ws.freeze_panes = 'B2'
 
 
 # ==========================================
@@ -1223,7 +1363,7 @@ def sync_manual_sheets(output_excel_path, static_excel_path, import_dir):
         return False
 
     # Namen der Blätter, die der Code aus data/ erzeugt
-    generated = set()
+    generated = {clean_sheet_title(OVERVIEW_SHEET_NAME)}
     if os.path.isdir(import_dir):
         for root, dirs, files in os.walk(import_dir):
             if root == import_dir:
@@ -1314,6 +1454,7 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
             return
 
     created_sheets = {}
+    overview_entries = []
 
     # 1. Basis-Arbeitsmappe laden:
     if os.path.exists(static_excel_path):
@@ -1325,11 +1466,32 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
         default_sheet = wb.active
         static_count = 0
 
-    # 2. Dynamische Blätter aus data/ verarbeiten
+    # 2. Globale Mapping-Dateien laden (maptoall.map und maptoall_hl7.map)
+    global_map_candidates = [
+        os.path.join(import_dir, GLOBAL_MAPPING_NAME),
+        GLOBAL_MAPPING_NAME,
+    ]
+    global_map_path = next((p for p in global_map_candidates if os.path.isfile(p)), None)
+    global_mapping = extract_mapping_descriptions(global_map_path) if global_map_path else ({}, {})
+    if global_map_path:
+        print(f"Globales Mapping geladen: '{global_map_path}'")
+
+    hl7_global_map_candidates = [
+        os.path.join(import_dir, GLOBAL_HL7_MAPPING_NAME),
+        GLOBAL_HL7_MAPPING_NAME,
+    ]
+    hl7_global_map_path = next((p for p in hl7_global_map_candidates if os.path.isfile(p)), None)
+    hl7_global_mapping = extract_mapping_descriptions(hl7_global_map_path) if hl7_global_map_path else ({}, {})
+    if hl7_global_map_path:
+        print(f"Globales HL7-Mapping geladen: '{hl7_global_map_path}'")
+
+    # 3. Dynamische Blätter und System-Logiken aus data/ verarbeiten
     folders_processed = 0
+    global_map_names_lower = {GLOBAL_MAPPING_NAME.lower(), GLOBAL_HL7_MAPPING_NAME.lower()}
 
     if os.path.exists(import_dir):
         for root, dirs, files in os.walk(import_dir):
+            dirs.sort(key=lambda d: d.swapcase())
             if root == import_dir:
                 continue
 
@@ -1337,34 +1499,72 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
                 os.path.join(root, f) for f in files
                 if f.lower().endswith(DATA_EXTENSIONS)
             ]
-
-            matching_files.sort(key=lambda p: os.path.basename(p).swapcase()) #nach Dateiname sortieren
-
-            if not matching_files:
-                continue
+            matching_files.sort(key=lambda p: os.path.basename(p).swapcase())
 
             mapping_file = None
-            for f in files:
-                if f.lower().endswith(MAPPING_EXTENSIONS):
+            for f in sorted(files, key=lambda n: n.swapcase()):
+                if f.lower().endswith(MAPPING_EXTENSIONS) and f.lower() not in global_map_names_lower:
                     mapping_file = os.path.join(root, f)
                     break
 
-            folder_name = os.path.basename(root)
-            sheet_title = clean_sheet_title(folder_name)
+            if not matching_files and not mapping_file:
+                continue
 
+            folder_name = os.path.basename(root)
+            local_mapping = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
+            local_fields, _ = local_mapping
+
+            # Format bestimmen (über Testdateien, oder falls noch keine vorhanden, über .map-Feld-IDs)
+            exts = sorted({os.path.splitext(fp)[1].lower() for fp in matching_files})
+            if exts:
+                uses_hl7 = '.hl7' in exts
+                format_label = ", ".join(e.lstrip('.').upper() for e in exts)
+            else:
+                uses_hl7 = is_hl7_mapping(local_fields)
+                format_label = "HL7 (nur .map)" if uses_hl7 else "Nur .map"
+
+            _, combined_meta = build_combined_mapping(
+                global_mapping, hl7_global_mapping, local_mapping, uses_hl7=uses_hl7
+            )
+
+            overview_entries.append({
+                'system': folder_name,
+                'format_label': format_label,
+                'mapping_name': os.path.basename(mapping_file) if mapping_file else "—",
+                'meta_info': combined_meta,
+            })
+
+            if not matching_files:
+                print(f"Ordner '{folder_name}' enthält keine Testdateien (nur in '{OVERVIEW_SHEET_NAME}' aufgenommen).")
+                continue
+
+            sheet_title = clean_sheet_title(folder_name)
             map_info = f" [mit Mapping: {os.path.basename(mapping_file)}]" if mapping_file else ""
             print(f"Verarbeite Ordner '{folder_name}' ({len(matching_files)} Datei(en)){map_info}...")
 
             ws = wb.create_sheet(title=sheet_title)
             created_sheets[folder_name] = ws
-            write_data_sheet(ws, matching_files, mapping_file=mapping_file)
+            write_data_sheet(
+                ws,
+                matching_files,
+                mapping_file=mapping_file,
+                global_mapping=global_mapping,
+                hl7_global_mapping=hl7_global_mapping
+            )
             folders_processed += 1
 
-    # Falls keine manual.xlsx existierte, aber Ordner verarbeitet wurden, das Standard-Sheet löschen
-    if static_count == 0 and folders_processed > 0 and 'default_sheet' in locals():
+    # 4. Übersichts-Sheet erstellen (vor den einzelnen System-Sheets einsortieren)
+    overview_created = 0
+    if overview_entries:
+        overview_ws = wb.create_sheet(title=clean_sheet_title(OVERVIEW_SHEET_NAME), index=static_count)
+        write_overview_sheet(overview_ws, overview_entries)
+        overview_created = 1
+
+    # Falls keine manual.xlsx existierte, aber Inhalte erzeugt wurden, das Standard-Sheet löschen
+    if static_count == 0 and (folders_processed > 0 or overview_created > 0) and 'default_sheet' in locals():
         wb.remove(default_sheet)
 
-    if static_count > 0 or folders_processed > 0:
+    if static_count > 0 or folders_processed > 0 or overview_created > 0:
         # Gewünschtes Sheet als aktives Blatt setzen, damit Excel es direkt anzeigt
         if target_folder:
             target_ws = created_sheets.get(target_folder)
@@ -1376,7 +1576,10 @@ def run_import(import_dir="data", output_excel_path="vergleich_transponiert.xlsx
                     sheet.sheet_view.tabSelected = (sheet is target_ws)
 
         wb.save(output_excel_path)
-        print(f"\nErfolgreich gespeichert in '{output_excel_path}' ({static_count} statische(s) Sheet(s), {folders_processed} dynamische(s) Sheet(s)).")
+        print(
+            f"\nErfolgreich gespeichert in '{output_excel_path}' "
+            f"({static_count} statische(s) Sheet(s), {overview_created} Übersicht, {folders_processed} System-Sheet(s))."
+        )
         open_file(output_excel_path)
     else:
         print(f"Keine Dateien in '{import_dir}' oder '{static_excel_path}' gefunden.")

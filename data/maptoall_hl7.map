@@ -1,0 +1,7 @@
+### Was hier eingetragen wird, gilt für alle HL7-Umsysteme
+
+BESCH_BESONDERHEITEN=
+BESCH_LOGIK_ORCHESTRA=Wenn A05 Event (Voraufnahme) und pv2.8 (geplantes Aufnahmedatum) und pv2.9 (geplantes Entlassungsdatum) identisch sind, soll pv2.9 (gepantes Entlassungsdatum) geleert werden
+BESCH_LOGIK_UMSYSTEM=
+BESCH_ANPASSUNG=
+
