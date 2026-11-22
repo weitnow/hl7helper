@@ -6,3 +6,10 @@ BESCH_LOGIK_ORCHESTRA=Wenn A05 Event (Voraufnahme) und pv2.8 (geplantes Aufnahme
 BESCH_LOGIK_UMSYSTEM=
 BESCH_ANPASSUNG=
 
+
+
+PV1_44 = Aufnahmedatum und -uhrzeit
+PV1_45 = Entlassungsdatum und -uhrzeit
+
+PV2_8 = Geplantes Aufnahmedatum und -uhrzeit
+PV2_9 = Geplantes Entlassungsdatum und -uhrzeit

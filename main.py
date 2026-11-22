@@ -791,20 +791,21 @@ def is_hl7_mapping(field_mapping):
 
 def build_combined_mapping(global_mapping, hl7_global_mapping, local_mapping, uses_hl7):
     """Führt globale Mappings (maptoall.map, bei HL7 zusätzlich maptoall_hl7.map)
-    und das systemspezifische Mapping zusammen."""
+    und das systemspezifische Mapping zusammen.
+
+    - Feldbeschreibungen: maptoall_hl7.map (und maptoall.map) greifen nur als Fallback,
+      wenn in der systemspezifischen *.map-Datei noch keine Bezeichnung für das Feld existiert.
+    - BESCH_*-Metadaten: werden aus allen aktiven Mapping-Quellen kombiniert.
+    """
     global_fields, global_meta = global_mapping if global_mapping else ({}, {})
     hl7_fields, hl7_meta = (hl7_global_mapping if hl7_global_mapping else ({}, {})) if uses_hl7 else ({}, {})
     local_fields, local_meta = local_mapping if local_mapping else ({}, {})
 
-    # Feldbemerkungen zusammenführen (zusätzliche Hinweise werden angehängt statt überschrieben)
+    # Priorität: systemspezifische .map > maptoall_hl7.map (falls HL7) > maptoall.map
     field_descriptions = {}
     for src_fields in (global_fields, hl7_fields, local_fields):
         for k, v in src_fields.items():
-            if not v:
-                continue
-            if k in field_descriptions and field_descriptions[k] != v:
-                field_descriptions[k] = f"{field_descriptions[k]}\n{v}"
-            else:
+            if v:
                 field_descriptions[k] = v
 
     # Metadaten aus maptoall.map, maptoall_hl7.map (falls HL7) und System-.map aggregieren
