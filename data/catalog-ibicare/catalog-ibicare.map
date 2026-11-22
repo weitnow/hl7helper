@@ -1,0 +1,22 @@
+# Beispiel für mapping.map
+
+BESCH_BESONDERHEITEN=
+BESCH_LOGIK_ORCHESTRA=katopale_F.txt wird herausgefiltert, nur katopale_D.txt wird an Umsysteme weitergeleitet. Im Feld 1 wird die Gruppe entfernt, so dass nur die Leistungsnummer geliefert wird. Die Leistungsnummer wird - bei numerischen Werten - mit führenden 0 bis auf 10 Stellen aufgefüllt. Nicht numerische Werte oder alphanumerische Werte werden unverändert gelassen (z.B. 00.9999, 1373K, 209.8.1 usw.). Orchestra prüft, ob die gleiche Leistungsnummer mehr als einmal vorkommt, wenn ja, wird nur die aktuell gültige (aufgrund Gültigkeitsdatum) an die Umsysteme gesendet. Die gleiche Leistungsnummer kann somit nur max. einmal im Leikat vorkommen. Wenn nur eine Leistungsnummer nur einmal vorkommt, dann wird diese unabhängig der Gültigkeit an die Umsysteme gesendet. Für IBIcare werden die Datumsfelder (Feld 2 und Feld 3) in vom Format 01/01/2026 in 202601010000 umgewandelt. Orchestra prüft ob im Feld 7 ein F ist, wenn ja, wird dieses im Feld9 vorne zu den bestehenden Werten hinzugefügt. Wenn im Feld 7 ein P ist, wird das P zusammen mit dem Wert in Feld 8 ins Feld 9 geschrieben.
+BESCH_LOGIK_UMSYSTEM=IBICare erwartet das Datum im Format 202601010000 
+#BESCH_ANPASSUNG=
+
+# Format: Feld-ID=Beschreibung
+
+# Für HL7-Felder:
+# PID_5=Patientenname
+# PID_7=Geburtsdatum
+# OBX_5=Laborwert Resultat
+
+# Für Text-/CSV-Dateien:
+# Feld 1=Auftragsnummer
+# Feld 2=Kundenname
+# Feld 3=Erstellungsdatum
+
+Feld 1 = [Gruppe][Leistungsnummer]
+Feld 11 = Gruppe
+Feld 29 = Hier wird entweder <leer>, RKB, KSA, KSA+RKB geliefert
