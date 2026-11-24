@@ -1,6 +1,7 @@
 BESCH_BESONDERHEITEN=Opale Ärztestamm Export (medopale.txt)
 BESCH_LOGIK_ORCHESTRA=
 BESCH_LOGIK_UMSYSTEM=
+reader[20]
 
 Feld 1=Mandant
 Feld 2=Arztnummer

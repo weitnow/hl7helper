@@ -44,6 +44,12 @@ STANDARD_SEGMENT_ORDER = [
 # Erkennt HL7-Feld-IDs in .map-Dateien (z. B. MSH_9, PV2_8, PV1[2]_3.1)
 HL7_FIELD_KEY_PATTERN = re.compile(r'^[A-Z][A-Z0-9]{2}(?:\[\d+\])?_\d+')
 
+# Erkennt Zeilenlimit-Parameter in .map-Dateien (0-basiert, z. B. reader[0] = 1 Zeile, reader[20] = 21 Zeilen)
+READER_PARAM_PATTERN = re.compile(r'^reader\[(\d+)\]$', re.IGNORECASE)
+
+# Maximale Zeichenanzahl pro Excel-Zelle
+EXCEL_MAX_CELL_CHARS = 32767
+
 # Bezeichnungen für Komponenten (Schlüssel ohne Segment-Index, z. B. PV1_3.1)
 COMPONENT_NAMES = {
     'PV1_3.1': 'Point of Care',
@@ -750,12 +756,14 @@ def get_opa_sort_key(field_id):
 def extract_mapping_descriptions(file_path):
     """Liest eine Mapping-Datei (.map / .mapping) ein."""
     field_mapping = {}
-    meta_info = {
-        'BESCH_BESONDERHEITEN': '',
-        'BESCH_LOGIK_ORCHESTRA': '',
-        'BESCH_LOGIK_UMSYSTEM': '',
-        'BESCH_ANPASSUNG': ''
-    }
+    meta_text_keys = (
+        'BESCH_BESONDERHEITEN',
+        'BESCH_LOGIK_ORCHESTRA',
+        'BESCH_LOGIK_UMSYSTEM',
+        'BESCH_ANPASSUNG',
+    )
+    meta_info = {k: '' for k in meta_text_keys}
+    meta_info['READER_MAX_INDEX'] = None
 
     if not file_path or not os.path.exists(file_path):
         return field_mapping, meta_info
@@ -764,6 +772,11 @@ def extract_mapping_descriptions(file_path):
         for line in f:
             line = line.strip()
             if not line or line.startswith('#') or line.startswith('//'):
+                continue
+
+            reader_match = READER_PARAM_PATTERN.match(line)
+            if reader_match:
+                meta_info['READER_MAX_INDEX'] = int(reader_match.group(1))
                 continue
 
             if '=' in line:
@@ -776,7 +789,7 @@ def extract_mapping_descriptions(file_path):
             field_id = key.strip()
             description = val.strip()
 
-            if field_id in meta_info:
+            if field_id in meta_text_keys:
                 meta_info[field_id] = description
             elif field_id:
                 field_mapping[field_id] = description
@@ -816,6 +829,13 @@ def build_combined_mapping(global_mapping, hl7_global_mapping, local_mapping, us
             if val and val not in parts:
                 parts.append(val)
         meta_info[key] = "\n".join(parts)
+
+    reader_max_index = None
+    for src_meta in (global_meta, hl7_meta, local_meta):
+        val = src_meta.get('READER_MAX_INDEX')
+        if val is not None:
+            reader_max_index = val
+    meta_info['READER_MAX_INDEX'] = reader_max_index
 
     return field_descriptions, meta_info
 
@@ -930,9 +950,11 @@ def extract_opa_fields(file_path):
     return fields_data
 
 
-def extract_text_fields(file_path):
-    """Liest strukturierte Textdateien (.dat, .txt, .csv) ein."""
-    fields_data = {}
+def extract_text_fields(file_path, max_row_index=0):
+    """Liest strukturierte Textdateien (.dat, .txt, .csv) ein.
+    max_row_index ist 0-basiert (0 = nur 1. Zeile, 20 = Zeilen 1 bis 21).
+    Falls die Datei weniger Zeilen enthält, werden nur die vorhandenen Zeilen gelesen.
+    Gibt eine Liste von Feld-Dicts (eines pro eingelesener Zeile) zurück."""
     ext = os.path.splitext(file_path)[1].lower()
 
     if ext == '.dat':
@@ -942,36 +964,43 @@ def extract_text_fields(file_path):
     else:
         delimiter = ','
 
-    with open(file_path, 'r', encoding='utf-8-sig', errors='ignore') as f:
-        content = f.read().strip()
-
+    content = read_text(file_path)
     if not content:
-        return fields_data
+        return []
 
     lines = [line for line in content.splitlines() if line.strip()]
     reader = list(csv.reader(lines, delimiter=delimiter))
 
     if not reader:
-        return fields_data
+        return []
 
     type_label = ext.replace('.', '').upper()
-    first_row = reader[0]
+    end_index = 0 if (max_row_index is None or max_row_index < 0) else max_row_index
+    selected_rows = reader[:end_index + 1]
 
-    for idx, val in enumerate(first_row, start=1):
-        field_id = f"Feld {idx}"
-        fields_data[field_id] = {
-            'segment': type_label,
-            'long_name': field_id,
-            'value': val.strip()
-        }
+    rows_data = []
+    for row in selected_rows:
+        fields_data = {}
+        for idx, val in enumerate(row, start=1):
+            field_id = f"Feld {idx}"
+            fields_data[field_id] = {
+                'segment': type_label,
+                'long_name': field_id,
+                'value': val.strip()
+            }
+        rows_data.append(fields_data)
 
-    return fields_data
+    return rows_data
 
 
 def read_raw_file_content(file_path):
     """Liest den exakten Rohinhalt der Datei für die Fußzeile aus."""
     try:
-        return read_text(file_path)
+        content = read_text(file_path)
+        if len(content) > EXCEL_MAX_CELL_CHARS:
+            suffix = "\n... [gekürzt wegen Excel-Zellenlimit]"
+            return content[:EXCEL_MAX_CELL_CHARS - len(suffix)] + suffix
+        return content
     except Exception:
         return ""
 
@@ -982,39 +1011,54 @@ def read_raw_file_content(file_path):
 
 def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7_global_mapping=None):
     """Befüllt ein Excel-Tabellenblatt mit Metadaten, Dateidaten und Rohcode."""
-    parsed_files = []
+    parsed_columns = []
     all_fields_set = set()
-    field_order_preserve = []
     has_hl7 = False
     has_opa = False
+
+    local_mapping = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
+    reader_max_index = local_mapping[1].get('READER_MAX_INDEX')
+    if reader_max_index is None and global_mapping:
+        reader_max_index = global_mapping[1].get('READER_MAX_INDEX')
+    if reader_max_index is None:
+        reader_max_index = 0
 
     # 1. Dateien verarbeiten
     for fp in file_paths:
         ext = os.path.splitext(fp)[1].lower()
+        base_name = os.path.basename(fp)
         try:
             if ext == '.hl7':
                 p_data = extract_hl7_fields(fp)
                 has_hl7 = True
+                raw_content = read_raw_file_content(fp)
+                parsed_columns.append((base_name, p_data, raw_content))
+                all_fields_set.update(p_data.keys())
             elif ext == '.opa':
                 p_data = extract_opa_fields(fp)
                 has_opa = True
+                raw_content = read_raw_file_content(fp)
+                parsed_columns.append((base_name, p_data, raw_content))
+                all_fields_set.update(p_data.keys())
             else:
-                p_data = extract_text_fields(fp)
-
-            raw_content = read_raw_file_content(fp)
-            parsed_files.append((fp, p_data, raw_content))
-
-            for k in p_data.keys():
-                if k not in all_fields_set:
-                    all_fields_set.add(k)
-                    field_order_preserve.append(k)
+                rows_data = extract_text_fields(fp, max_row_index=reader_max_index)
+                if not rows_data:
+                    continue
+                if len(rows_data) == 1:
+                    raw_content = read_raw_file_content(fp)
+                    parsed_columns.append((base_name, rows_data[0], raw_content))
+                    all_fields_set.update(rows_data[0].keys())
+                else:
+                    for row_no, row_data in enumerate(rows_data, start=1):
+                        col_label = f"{base_name} (Zeile {row_no})"
+                        parsed_columns.append((col_label, row_data, ""))
+                        all_fields_set.update(row_data.keys())
         except Exception as e:
             print(f"Fehler beim Einlesen von '{fp}': {e}")
 
-    if not parsed_files:
+    if not parsed_columns:
         return
 
-    local_mapping = extract_mapping_descriptions(mapping_file) if mapping_file else ({}, {})
     field_descriptions, meta_info = build_combined_mapping(
         global_mapping, hl7_global_mapping, local_mapping, uses_hl7=has_hl7
     )
@@ -1068,7 +1112,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7
         bottom=Side(style='thin', color='D9D9D9')
     )
 
-    total_cols = len(parsed_files) + 4
+    total_cols = len(parsed_columns) + 4
 
     # 4. METADATEN-BLOCK ERSTELLEN
     meta_keys = [
@@ -1121,9 +1165,8 @@ def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7
     for c in range(1, 5):
         ws.cell(row=header_row, column=c).alignment = Alignment(horizontal="center", vertical="center")
 
-    for file_idx, (fp, _, _) in enumerate(parsed_files, start=5):
-        filename = os.path.basename(fp)
-        c = ws.cell(row=header_row, column=file_idx, value=filename)
+    for file_idx, (col_label, _, _) in enumerate(parsed_columns, start=5):
+        c = ws.cell(row=header_row, column=file_idx, value=col_label)
         c.font = font_file_header
         c.fill = fill_file_header
         c.alignment = Alignment(horizontal="center", vertical="center")
@@ -1137,7 +1180,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7
         last_data_row = row_idx
 
         seg_name, long_name = "", ""
-        for _, p_data, _ in parsed_files:
+        for _, p_data, _ in parsed_columns:
             if f_id in p_data:
                 seg_name = p_data[f_id]['segment']
                 long_name = p_data[f_id]['long_name']
@@ -1170,7 +1213,7 @@ def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7
         c_remark.font, c_remark.fill = font_remark_col, (fill_always if is_always else fill_remark_col)
         c_remark.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
-        for file_idx, (_, p_data, _) in enumerate(parsed_files, start=5):
+        for file_idx, (_, p_data, _) in enumerate(parsed_columns, start=5):
             val = p_data.get(f_id, {}).get('value', '')
             cell = ws.cell(row=row_idx, column=file_idx, value=val)
             cell.font = font_data
@@ -1196,14 +1239,14 @@ def write_data_sheet(ws, file_paths, mapping_file=None, global_mapping=None, hl7
         cell_m.fill = fill_raw_header
         cell_m.border = thin_border
 
-    for file_idx, (_, _, raw_content) in enumerate(parsed_files, start=5):
+    for file_idx, (_, _, raw_content) in enumerate(parsed_columns, start=5):
         cell_raw = ws.cell(row=raw_row, column=file_idx, value=raw_content)
         cell_raw.font = font_raw_code
         cell_raw.fill = fill_raw_cell
         cell_raw.border = thin_border
         cell_raw.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
-    max_lines = max([len(raw.splitlines()) for _, _, raw in parsed_files] + [1])
+    max_lines = max([len(raw.splitlines()) for _, _, raw in parsed_columns] + [1])
     ws.row_dimensions[raw_row].height = max(30, min(max_lines * 15, 300))
 
     # 8. Spaltenbreiten anpassen

@@ -2,8 +2,9 @@
 
 BESCH_BESONDERHEITEN=
 BESCH_LOGIK_ORCHESTRA=
-BESCH_LOGIK_UMSYSTEM=
+BESCH_LOGIK_UMSYSTEM=Lese die A-Nummer welche von Opale kommt im Feld 38 aus. Transformiere für Ines eine A zu einer 8 um. Eine E zu einer 9. Danach fülle diese Nummer im Feld 2 für Ines ab (Ines kann nur mit numerischen Werten umgehen). Bei Export dieser Nummer aus Opale, wird eine 8 wieder zu einem A und eine 9 wieder zu einem E. 
 #BESCH_ANPASSUNG=
+reader[20]
 
 # Format: Feld-ID=Beschreibung
 
@@ -17,4 +18,12 @@ BESCH_LOGIK_UMSYSTEM=
 # Feld 2=Kundenname
 # Feld 3=Erstellungsdatum
 
-
+Feld 2= Arztnummer
+Feld 3= Nachname/Vorname
+Feld 7= Strasse
+Feld 8= PLZ
+Feld 9= Ort
+Feld 10= Kanton
+Feld 14= Arzttyp
+Feld 19= GLN-Nummer
+Feld 38= A-Nummer

@@ -4,6 +4,7 @@ BESCH_BESONDERHEITEN=
 BESCH_LOGIK_ORCHESTRA=katopale_F.txt wird herausgefiltert, nur katopale_D.txt wird an Umsysteme weitergeleitet. Im Feld 1 wird die Gruppe entfernt, so dass nur die Leistungsnummer geliefert wird. Die Leistungsnummer wird - bei numerischen Werten - mit führenden 0 bis auf 10 Stellen aufgefüllt. Nicht numerische Werte oder alphanumerische Werte werden unverändert gelassen (z.B. 00.9999, 1373K, 209.8.1 usw.). Orchestra prüft, ob die gleiche Leistungsnummer mehr als einmal vorkommt, wenn ja, wird nur die aktuell gültige (aufgrund Gültigkeitsdatum) an die Umsysteme gesendet. Die gleiche Leistungsnummer kann somit nur max. einmal im Leikat vorkommen. Wenn nur eine Leistungsnummer nur einmal vorkommt, dann wird diese unabhängig der Gültigkeit an die Umsysteme gesendet. Das File für Ines wird gefilert, so dass nur Leistungen der Gruppe ME = Medikamet oder MA = Material übermittelt werden. 
 BESCH_LOGIK_UMSYSTEM=Auf Seiten Ines ist folgende Logik implementiert. Wenn im Feld 29 RKB, dann als Haustamm taggen, wenn KSA+RKB, dann als Hausstamm taggen, wenn KSA dann als Haustamm KSA taggen, alle anderen Werte ignorieren
 #BESCH_ANPASSUNG=
+reader[20]
 
 # Format: Feld-ID=Beschreibung
 
